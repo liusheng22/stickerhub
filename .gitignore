@@ -1,0 +1,27 @@
+# Nuxt build output
+.nuxt/
+.output/
+.data/
+.nitro/
+.cache/
+dist/
+.vercel/
+
+# Dependencies
+node_modules/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local product references
+_docs/
+
+# Logs and editor files
+*.log
+.DS_Store
+.idea/
+.vscode/
+auto-imports.d.ts
+components.d.ts
