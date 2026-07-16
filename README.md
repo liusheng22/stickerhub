@@ -2,6 +2,11 @@
 
 StickerHub is a Nuxt 4 sticker pack destination for browsing, searching, previewing, and downloading a large collection of sticker packs.
 
+## Live preview
+
+- [Official site](https://stickerhub.lius.me)
+- [Vercel deployment](https://wxsticker.vercel.app)
+
 ## What this project is
 
 StickerHub is primarily a consumer-facing website:

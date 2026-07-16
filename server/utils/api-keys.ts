@@ -2,6 +2,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { createClient } from '@tursodatabase/serverless/compat'
+import { normalizeSqlRow } from './sql-row'
 
 type SqlValue = string | number | null
 type SqlParams = Record<string, SqlValue>
@@ -134,20 +135,6 @@ const schemaStatements = [
 ]
 
 const localDatabases = new Map<string, LocalDatabase>()
-
-function normalizeValue(value: unknown): unknown {
-  if (typeof value === 'bigint') {
-    return Number.isSafeInteger(Number(value)) ? Number(value) : value.toString()
-  }
-
-  return value
-}
-
-function normalizeRow(row: Record<string, unknown>): SqlRow {
-  return Object.fromEntries(
-    Object.entries(row).map(([key, value]) => [key, normalizeValue(value)]),
-  )
-}
 
 function stringValue(value: unknown): string | null {
   return typeof value === 'string' ? value : value == null ? null : String(value)
@@ -300,7 +287,7 @@ export class ApiKeyStore {
 
       try {
         const result = await client.execute({ sql, args: params })
-        return result.rows.map(row => normalizeRow(row as unknown as Record<string, unknown>))
+        return result.rows.map(row => normalizeSqlRow(row, result.columns))
       } finally {
         client.close()
       }
@@ -309,7 +296,7 @@ export class ApiKeyStore {
     if (!this.configuration.sqlitePath) throw new Error('API key storage is not configured.')
     const database = await getLocalDatabase(this.configuration.sqlitePath)
     const rows = database.prepare(sql).all(params) as Record<string, unknown>[]
-    return rows.map(normalizeRow)
+    return rows.map(row => normalizeSqlRow(row))
   }
 
   private async execute(sql: string, params: SqlParams = {}): Promise<void> {

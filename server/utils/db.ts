@@ -1,8 +1,8 @@
 import { createClient } from '@tursodatabase/serverless/compat'
+import { normalizeSqlRow, type SqlRow } from './sql-row'
 
 type SqlValue = string | number | bigint | boolean | null
 export type SqlParams = Record<string, SqlValue>
-export type SqlRow = Record<string, unknown>
 
 type LocalStatement = {
   all: (params?: SqlParams) => unknown[]
@@ -19,20 +19,6 @@ function assertReadOnlyStatement(sql: string) {
   if (!/^\s*(?:SELECT|WITH)\b/i.test(sql)) {
     throw new Error('Only read-only database statements are allowed.')
   }
-}
-
-function normalizeValue(value: unknown): unknown {
-  if (typeof value === 'bigint') {
-    return Number.isSafeInteger(Number(value)) ? Number(value) : value.toString()
-  }
-
-  return value
-}
-
-function normalizeRow(row: Record<string, unknown>): SqlRow {
-  return Object.fromEntries(
-    Object.entries(row).map(([key, value]) => [key, normalizeValue(value)]),
-  )
 }
 
 async function getLocalDatabase(path: string): Promise<LocalDatabase> {
@@ -58,7 +44,7 @@ export async function selectRows(sql: string, params: SqlParams = {}): Promise<S
     })
     try {
       const result = await client.execute({ sql, args: params })
-      return result.rows.map((row) => normalizeRow(row as unknown as Record<string, unknown>))
+      return result.rows.map(row => normalizeSqlRow(row, result.columns))
     } finally {
       client.close()
     }
@@ -68,7 +54,7 @@ export async function selectRows(sql: string, params: SqlParams = {}): Promise<S
     const database = await getLocalDatabase(config.sqlitePath)
     const rows = database.prepare(sql).all(params) as Record<string, unknown>[]
 
-    return rows.map(normalizeRow)
+    return rows.map(row => normalizeSqlRow(row))
   }
 
   throw new Error('Sticker catalog database is not configured.')
