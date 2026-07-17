@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "nuxt build",
-    "build:cloudflare": "NITRO_PRESET=cloudflare_module nuxt build",
+    "build:cloudflare": "NUXT_SITE_URL=https://stickerhub.lius.me NUXT_SITE_INDEXABLE=true NITRO_PRESET=cloudflare_module nuxt build",
     "dev": "nuxt dev",
     "deploy:cloudflare": "pnpm run build:cloudflare && wrangler deploy --keep-vars",
     "preview": "nuxt preview",

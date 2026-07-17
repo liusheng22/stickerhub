@@ -49,7 +49,7 @@ Nuxt runtime configuration is overridden by `NUXT_`-prefixed values in a Worker.
 | `NUXT_RESEND_FROM_EMAIL` | `NUXT_RESEND_FROM_EMAIL` |
 | `NUXT_RESEND_WEBHOOK_SECRET` | `NUXT_RESEND_WEBHOOK_SECRET` |
 
-`NUXT_SITE_URL=https://stickerhub.lius.me` and `NUXT_SITE_INDEXABLE=true` are non-secret build variables. Configure them in the Cloudflare Build environment before the build starts.
+The `build:cloudflare` script sets `NUXT_SITE_URL=https://stickerhub.lius.me` and `NUXT_SITE_INDEXABLE=true` before Nuxt compiles the production Worker. This prevents runtime-only Worker variables from accidentally producing a `noindex` production build.
 
 After the first valid Worker deployment, secrets can be uploaded in one operation with Wrangler's `secret bulk` command. Use a temporary, untracked `.env` or JSON input file; never add secret values to `wrangler.jsonc` or commit them.
 
