@@ -2,29 +2,56 @@
 
 ## Production topology
 
-StickerHub is deployed as a Nuxt application on Vercel, with Cloudflare handling the `lius.me` DNS zone, TLS edge, CDN, and WAF.
+StickerHub supports both Vercel and Cloudflare Workers. Keep only one production origin for `stickerhub.lius.me`; use the other platform as a preview or rollback target until the production cutover is complete.
 
-Do not deploy the same Nuxt application to Cloudflare Pages or Workers as a second origin.
+This repository is configured for a Cloudflare **Worker**, not Cloudflare Pages. The deployment entry point and static assets are described in [`wrangler.jsonc`](../wrangler.jsonc).
 
-## Required production secrets
+## Cloudflare Workers Build
 
-Set these values in the deployment platform's server-side secret store:
+Use Node.js `22.22.0` or later. The repository pins `22.22.0` in `.nvmrc` and requires Node 22–24 in `package.json`.
 
-- `TURSO_DATABASE_URL`
-- `TURSO_AUTH_TOKEN`
-- `NUXT_API_KEYS_DATABASE_URL`
-- `NUXT_API_KEYS_AUTH_TOKEN`
-- `NUXT_ADMIN_API_KEY`
-- `NUXT_SESSION_PASSWORD`
-- `NUXT_RESEND_API_KEY` (optional)
-- `NUXT_RESEND_FROM_EMAIL` (optional)
-- `NUXT_RESEND_WEBHOOK_SECRET` (recommended when Resend is enabled)
-- `CORS_ALLOWED_ORIGINS`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `API_RATE_LIMIT`
-- `NUXT_SITE_URL`
-- `NUXT_SITE_INDEXABLE=true`
+For a Git-connected Cloudflare Worker Build, configure:
+
+```text
+Build command: pnpm run build:cloudflare
+Deploy command: pnpm exec wrangler deploy --keep-vars
+```
+
+Do not use `nuxi build --preset=cloudflare_pages`: that preset produces a Cloudflare Pages deployment rather than a Worker.
+
+`wrangler.jsonc` keeps the Worker `workers.dev` URL available for verification, disables version-specific preview URLs, and manages `stickerhub.lius.me` as the production Custom Domain. Cloudflare creates the required proxied DNS record and certificate when Wrangler deploys this configuration.
+
+For a direct local release after logging in with Wrangler:
+
+```bash
+pnpm run deploy:cloudflare
+```
+
+The project build copies Scalar's official standalone browser assets into the Worker asset bundle. It does not bundle Scalar into the Worker server runtime.
+
+## Cloudflare runtime secrets
+
+Nuxt runtime configuration is overridden by `NUXT_`-prefixed values in a Worker. For Cloudflare, use the names in the right column. Do not upload `STICKERHUB_SQLITE_PATH`, `STICKERMART_SQLITE_PATH`, or `NUXT_API_KEYS_SQLITE_PATH`: the local SQLite fallbacks cannot run in a Worker.
+
+| Local/Vercel variable | Cloudflare Worker secret |
+| --- | --- |
+| `TURSO_DATABASE_URL` | `NUXT_TURSO_DATABASE_URL` |
+| `TURSO_AUTH_TOKEN` | `NUXT_TURSO_AUTH_TOKEN` |
+| `NUXT_API_KEYS_DATABASE_URL` | `NUXT_API_KEYS_DATABASE_URL` |
+| `NUXT_API_KEYS_AUTH_TOKEN` | `NUXT_API_KEYS_AUTH_TOKEN` |
+| `NUXT_ADMIN_API_KEY` | `NUXT_ADMIN_API_KEY` |
+| `NUXT_SESSION_PASSWORD` | `NUXT_SESSION_PASSWORD` |
+| `CORS_ALLOWED_ORIGINS` | `NUXT_CORS_ALLOWED_ORIGINS` |
+| `UPSTASH_REDIS_REST_URL` | `NUXT_UPSTASH_REDIS_REST_URL` |
+| `UPSTASH_REDIS_REST_TOKEN` | `NUXT_UPSTASH_REDIS_REST_TOKEN` |
+| `API_RATE_LIMIT` | `NUXT_API_RATE_LIMIT` |
+| `NUXT_RESEND_API_KEY` | `NUXT_RESEND_API_KEY` |
+| `NUXT_RESEND_FROM_EMAIL` | `NUXT_RESEND_FROM_EMAIL` |
+| `NUXT_RESEND_WEBHOOK_SECRET` | `NUXT_RESEND_WEBHOOK_SECRET` |
+
+`NUXT_SITE_URL=https://stickerhub.lius.me` and `NUXT_SITE_INDEXABLE=true` are non-secret build variables. Configure them in the Cloudflare Build environment before the build starts.
+
+After the first valid Worker deployment, secrets can be uploaded in one operation with Wrangler's `secret bulk` command. Use a temporary, untracked `.env` or JSON input file; never add secret values to `wrangler.jsonc` or commit them.
 
 ## Data and infrastructure notes
 
@@ -42,12 +69,12 @@ Required settings for email support:
 - `NUXT_RESEND_API_KEY`
 - `NUXT_RESEND_FROM_EMAIL`
 - `NUXT_RESEND_WEBHOOK_SECRET`
-- `NUXT_SITE_URL` as a valid public HTTPS URL
+- `NUXT_SITE_URL` as a valid public HTTPS URL at build time
 
 Recommended webhook target:
 
 ```text
-https://YOUR_PUBLIC_HOST/api/webhooks/resend
+https://stickerhub.lius.me/api/webhooks/resend
 ```
 
 ## Verification
@@ -58,6 +85,8 @@ Before or after deployment, run:
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm run build:cloudflare
+pnpm exec wrangler deploy --dry-run --keep-vars
 ```
 
 ## Notes

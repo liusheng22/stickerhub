@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { Webhook } from 'standardwebhooks'
 import { getRuntimeApiKeyStore, type ApiKeyEmailNotificationStatus } from '../../utils/api-keys'
 import { throwApiError, withApiErrorBoundary } from '../../utils/api/errors'
 
@@ -9,6 +9,25 @@ const deliveryStatusByEvent: Record<string, Exclude<ApiKeyEmailNotificationStatu
   'email.complained': 'complained',
   'email.failed': 'failed',
   'email.suppressed': 'suppressed',
+}
+
+type ResendWebhookEvent = {
+  type: string
+  created_at: string
+  data: {
+    email_id?: unknown
+  }
+}
+
+function isResendWebhookEvent(value: unknown): value is ResendWebhookEvent {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+
+  const event = value as Record<string, unknown>
+  return typeof event.type === 'string'
+    && typeof event.created_at === 'string'
+    && Boolean(event.data)
+    && typeof event.data === 'object'
+    && !Array.isArray(event.data)
 }
 
 export default defineEventHandler(event => withApiErrorBoundary(event, async () => {
@@ -27,13 +46,19 @@ export default defineEventHandler(event => withApiErrorBoundary(event, async () 
   }
   const rawPayload = typeof payload === 'string' ? payload : payload.toString('utf8')
 
-  let webhookEvent: ReturnType<Resend['webhooks']['verify']>
+  let webhookEvent: ResendWebhookEvent
   try {
-    webhookEvent = new Resend().webhooks.verify({
-      payload: rawPayload,
-      headers: { id, timestamp, signature },
-      webhookSecret: config.resendWebhookSecret,
+    const verified = new Webhook(config.resendWebhookSecret).verify(rawPayload, {
+      'webhook-id': id,
+      'webhook-timestamp': timestamp,
+      'webhook-signature': signature,
     })
+
+    if (!isResendWebhookEvent(verified)) {
+      return sendNoContent(event)
+    }
+
+    webhookEvent = verified
   } catch {
     throwApiError(401, 'invalid_webhook_signature', 'The email delivery webhook signature is invalid.')
   }

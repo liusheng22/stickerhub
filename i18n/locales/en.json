@@ -325,6 +325,8 @@
     "apiKeyStorageText": "The Reference does not ship a production API key to the client and does not persist entered keys to localStorage.",
     "referencePageTitle": "Interactive API Reference",
     "referencePageDescription": "Rendered by Scalar directly from the StickerHub OpenAPI 3.1 contract.",
+    "referenceLoadErrorTitle": "API Reference could not be loaded",
+    "referenceLoadErrorDescription": "Refresh the page and try again.",
     "backToGuide": "Back to developer guide",
     "openContract": "Open JSON contract",
     "referenceNote": "Enter the X-API-Key issued for your integration to use Test Request. Ask AI and MCP remain disabled until real backend capabilities exist.",

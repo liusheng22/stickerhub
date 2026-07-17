@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "nuxt build",
+    "build:cloudflare": "NITRO_PRESET=cloudflare_module nuxt build",
     "dev": "nuxt dev",
+    "deploy:cloudflare": "pnpm run build:cloudflare && wrangler deploy --keep-vars",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest run",
@@ -20,18 +22,19 @@
     "@nuxt/ui": "4.9.0",
     "@nuxtjs/i18n": "10.4.1",
     "@nuxtjs/seo": "^5.3.2",
-    "@scalar/nuxt": "0.6.54",
     "@tursodatabase/serverless": "^1.2.3",
     "nuxt": "^4.4.8",
     "nuxt-auth-utils": "^0.5.29",
-    "resend": "^6.17.2",
+    "standardwebhooks": "1.0.0",
     "tailwindcss": "^4.3.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@scalar/api-reference": "1.62.5",
     "@iconify-json/lucide": "1.2.117",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4",
-    "vue-tsc": "^3.3.7"
+    "vue-tsc": "^3.3.7",
+    "wrangler": "4.111.0"
   }
 }

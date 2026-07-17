@@ -6,6 +6,8 @@
 .cache/
 dist/
 .vercel/
+.wrangler/
+worker-configuration.d.ts
 
 # Dependencies
 node_modules/

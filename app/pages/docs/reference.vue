@@ -109,7 +109,7 @@ useSeoMeta({
 
     <div class="scalar-reference-shell border-y border-ink/15 bg-paper">
       <ClientOnly>
-        <ScalarApiReference :configuration="scalarConfiguration" />
+        <DocsScalarReference :configuration="scalarConfiguration" />
         <template #fallback>
           <div class="grid min-h-[65vh] place-items-center">
             <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-brand-500" />

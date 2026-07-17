@@ -1,4 +1,3 @@
-import { Resend } from 'resend'
 import type { ApiKeyRecord } from './api-keys'
 
 export type KeyNotificationStatus = 'not-requested' | 'not-configured' | 'invalid-site-url' | 'accepted' | 'failed'
@@ -13,6 +12,10 @@ export interface IntegrationAccessEmail {
   subject: string
   text: string
   html: string
+}
+
+type ResendEmailResponse = {
+  id?: unknown
 }
 
 function escapeHtml(value: string): string {
@@ -159,6 +162,33 @@ export function renderIntegrationAccessEmail(
   return { subject, text, html }
 }
 
+async function sendResendEmail(
+  apiKey: string,
+  from: string,
+  to: string,
+  message: IntegrationAccessEmail,
+): Promise<string | null> {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
+    }),
+  })
+
+  if (!response.ok) return null
+
+  const payload = await response.json() as ResendEmailResponse
+  return typeof payload.id === 'string' && payload.id ? payload.id : null
+}
+
 export async function notifyIntegrationOwner(
   record: ApiKeyRecord,
   shouldNotify: boolean,
@@ -176,19 +206,16 @@ export async function notifyIntegrationOwner(
   const message = renderIntegrationAccessEmail(record, referenceUrl, purpose)
 
   try {
-    const resend = new Resend(config.resendApiKey)
-    const response = await resend.emails.send({
-      from: config.resendFromEmail,
-      to: record.ownerEmail,
-      subject: message.subject,
-      text: message.text,
-      html: message.html,
-    })
-    const providerMessageId = response.data?.id
+    const providerMessageId = await sendResendEmail(
+      config.resendApiKey,
+      config.resendFromEmail,
+      record.ownerEmail,
+      message,
+    )
 
-    return response.error || !providerMessageId
-      ? { status: 'failed' }
-      : { status: 'accepted', providerMessageId }
+    return providerMessageId
+      ? { status: 'accepted', providerMessageId }
+      : { status: 'failed' }
   } catch {
     return { status: 'failed' }
   }

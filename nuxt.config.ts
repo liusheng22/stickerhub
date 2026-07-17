@@ -1,5 +1,9 @@
 import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dirname, resolve } from 'node:path'
 
+const require = createRequire(import.meta.url)
+const scalarBrowserAssetsDirectory = resolve(dirname(require.resolve('@scalar/api-reference')), 'browser')
 const stickerHubSiteUrl = process.env.NUXT_SITE_URL || 'https://stickerhub.lius.me'
 const legacyLocalApiKeysDatabasePath = '.data/stickermart-api-keys.db'
 const defaultLocalApiKeysDatabasePath = process.env.NODE_ENV === 'production'
@@ -27,42 +31,9 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     'nuxt-auth-utils',
     '@nuxtjs/i18n',
-    '@scalar/nuxt',
     '@nuxt/scripts',
     '@nuxtjs/seo',
   ],
-
-  scalar: {
-    pathRouting: {
-      basePath: '/__scalar-reference',
-    },
-    url: '/openapi.json',
-    theme: 'none',
-    layout: 'modern',
-    darkMode: false,
-    forceDarkModeState: 'light',
-    hideDarkModeToggle: true,
-    showSidebar: true,
-    hideSearch: false,
-    hideModels: false,
-    hideClientButton: false,
-    hideTestRequestButton: false,
-    showOperationId: true,
-    operationTitleSource: 'summary',
-    documentDownloadType: 'json',
-    persistAuth: false,
-    telemetry: false,
-    showDeveloperTools: 'never',
-    devtools: false,
-    withDefaultFonts: false,
-    agent: {
-      disabled: true,
-      hideAddApi: true,
-    },
-    mcp: {
-      disabled: true,
-    },
-  },
 
   i18n: {
     defaultLocale: 'zh-CN',
@@ -226,12 +197,17 @@ export default defineNuxtConfig({
     '/en/docs/**': { robots: false },
     '/docs-old': { robots: false },
     '/en/docs-old': { robots: false },
-    '/__scalar-reference': { robots: false },
-    '/__scalar-reference/**': { robots: false },
   },
 
   nitro: {
     compressPublicAssets: true,
+    publicAssets: [
+      {
+        baseURL: '/_scalar',
+        dir: scalarBrowserAssetsDirectory,
+        maxAge: 60 * 60 * 24 * 365,
+      },
+    ],
     sourceMap: false,
   },
 
