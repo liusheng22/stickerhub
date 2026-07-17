@@ -23,7 +23,7 @@ const stage = computed(() => stages[props.index % stages.length])
   <UCard
     as="article"
     variant="outline"
-    class="group h-full overflow-hidden border-ink/15 bg-paper transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[4px_4px_0_#171717] focus-within:-translate-y-[3px] focus-within:shadow-[4px_4px_0_#171717]"
+    class="group h-full overflow-hidden border-ink/15 bg-paper transition-shadow duration-200 hover:shadow-[4px_4px_0_#171717] focus-within:shadow-[4px_4px_0_#171717]"
     :ui="{ body: 'p-0 sm:p-0' }"
   >
     <NuxtLink class="block h-full focus-visible:outline-offset-[-4px]" :to="localePath({ name: 'albums-productId', params: { productId: album.productId } })" :aria-label="t('cards.browseAlbum', { name: album.packName })">

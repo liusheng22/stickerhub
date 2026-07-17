@@ -15,7 +15,7 @@ const localePath = useLocalePath()
   <UCard
     as="article"
     variant="outline"
-    class="group h-full overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[7px_7px_0_#171717] focus-within:-translate-y-1 focus-within:shadow-[7px_7px_0_#171717]"
+    class="group h-full overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-shadow duration-200 hover:shadow-[7px_7px_0_#171717] focus-within:shadow-[7px_7px_0_#171717]"
     :ui="{ body: 'p-0 sm:p-0' }"
   >
     <NuxtLink

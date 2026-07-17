@@ -87,18 +87,18 @@ button:disabled,
 .offset-action {
   border: 2px solid var(--sticker-ink);
   box-shadow: 4px 4px 0 var(--sticker-ink);
-  transition: box-shadow 160ms ease, transform 160ms ease;
+  transition: box-shadow 160ms ease, filter 160ms ease;
 }
 
 .offset-action:hover:not(:disabled),
 .offset-action:focus-visible:not(:disabled) {
-  transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0 var(--sticker-ink);
+  filter: brightness(0.98);
 }
 
 .offset-action:active:not(:disabled) {
-  transform: translate(2px, 2px);
   box-shadow: 2px 2px 0 var(--sticker-ink);
+  filter: brightness(0.94);
 }
 
 .collector-card {

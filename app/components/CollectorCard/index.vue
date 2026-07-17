@@ -23,7 +23,7 @@ const stageColor = computed(() => stageColors[(props.position - 1) % stageColors
   <UCard
     as="article"
     variant="outline"
-    class="collector-card group overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-[transform,box-shadow] duration-200 hover:z-30 hover:rotate-0 hover:scale-[1.03] focus-within:z-30 focus-within:rotate-0 focus-within:scale-[1.03]"
+    class="collector-card group overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-shadow duration-200 hover:z-30 hover:shadow-[7px_7px_0_#171717] focus-within:z-30 focus-within:shadow-[7px_7px_0_#171717]"
     :ui="{ body: 'p-0 sm:p-0' }"
   >
     <NuxtLink

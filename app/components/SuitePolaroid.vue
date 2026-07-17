@@ -17,7 +17,7 @@ const imageUrl = computed(() => albumCardImage(props.album))
   <UCard
     as="article"
     variant="outline"
-    class="overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-transform duration-200 hover:-translate-y-1 focus-within:-translate-y-1"
+    class="overflow-hidden border-2 border-ink bg-paper shadow-[5px_5px_0_#171717] transition-shadow duration-200 hover:shadow-[7px_7px_0_#171717] focus-within:shadow-[7px_7px_0_#171717]"
     :ui="{ body: 'p-2 sm:p-2' }"
   >
     <NuxtLink

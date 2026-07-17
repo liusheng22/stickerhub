@@ -122,7 +122,7 @@ useSeoMeta({
               <NuxtLink
                 v-if="albumCreator && albumCreatorSlug"
                 :to="localePath({ name: 'creators-creatorSlug', params: { creatorSlug: albumCreatorSlug } })"
-                class="inline-flex min-h-11 items-center rounded-[6px] border border-ink bg-paper px-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 focus-visible:-translate-y-0.5"
+                class="inline-flex min-h-11 items-center rounded-[6px] border border-ink bg-paper px-3 text-sm font-semibold transition-colors hover:bg-mint/45 focus-visible:bg-mint/45"
               >
                 {{ t('album.byCreator', { name: albumCreator }) }}
               </NuxtLink>
