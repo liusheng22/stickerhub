@@ -147,12 +147,15 @@ useSeoMeta({
       </UContainer>
     </section>
 
-    <StickerViewer
-      v-model:open="viewerOpen"
-      v-model:selected-index="selectedStickerIndex"
-      :members="page.members"
-      :album-name="album.packName"
-    />
+    <ClientOnly>
+      <LazyStickerViewer
+        v-if="viewerOpen"
+        v-model:open="viewerOpen"
+        v-model:selected-index="selectedStickerIndex"
+        :members="page.members"
+        :album-name="album.packName"
+      />
+    </ClientOnly>
 
     <section v-for="group in page.relatedGroups" :key="group.reason" class="border-t border-ink bg-mint py-[58px] pb-[76px]">
       <UContainer class="max-w-[80rem]">

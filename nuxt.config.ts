@@ -142,9 +142,25 @@ export default defineNuxtConfig({
   robots: {
     groups: [
       {
-      userAgent: '*',
-      allow: ['/'],
-      disallow: [
+        userAgent: [
+          'ClaudeBot',
+          'Claude-SearchBot',
+          'anthropic-ai',
+          'GPTBot',
+          'CCBot',
+          'Bytespider',
+          'Google-Extended',
+          'Applebot-Extended',
+          'meta-externalagent',
+          'cohere-ai',
+          'PerplexityBot',
+        ],
+        disallow: ['/'],
+      },
+      {
+        userAgent: '*',
+        allow: ['/'],
+        disallow: [
           '/search',
           '/en/search',
           '/__',

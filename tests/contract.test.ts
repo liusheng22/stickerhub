@@ -10,6 +10,16 @@ import {
   stableOffset,
 } from '../shared/utils/related'
 import { albumCardImage, albumDescription, albumHeroImage, stickerDisplayName, stickerImage } from '../shared/utils/text'
+import { isBlockedAiCrawler } from '../server/utils/crawlers'
+
+describe('crawler access policy', () => {
+  it('blocks autonomous AI crawlers without blocking search engines or browsers', () => {
+    expect(isBlockedAiCrawler('Mozilla/5.0 ClaudeBot/1.0')).toBe(true)
+    expect(isBlockedAiCrawler('Mozilla/5.0 (compatible; GPTBot/1.2)')).toBe(true)
+    expect(isBlockedAiCrawler('Googlebot/2.1')).toBe(false)
+    expect(isBlockedAiCrawler('Mozilla/5.0 Chrome/150.0.0.0')).toBe(false)
+  })
+})
 
 describe('public API query contract', () => {
   it('applies the documented default and maximum list size', () => {
