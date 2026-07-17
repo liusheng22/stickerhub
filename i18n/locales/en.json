@@ -14,11 +14,13 @@
     "priceUnavailable": "Price unavailable",
     "imageUnavailable": "Image unavailable",
     "breadcrumb": "Breadcrumb",
+    "footerNavigation": "Footer navigation",
     "language": "Language",
     "catalog": "Sticker packs",
     "catalogUnavailable": "Sticker packs are temporarily unavailable.",
     "readOnly": "Read-only",
-    "brandTagline": "Your go-to place for sticker packs."
+    "brandTagline": "Your go-to place for sticker packs.",
+    "catalogScale": "{packs} sticker packs · {stickers} stickers"
   },
   "navigation": {
     "browse": "Browse",
@@ -189,12 +191,12 @@
     "preview": "Sticker preview {index}",
     "viewFullSize": "View full-size {label}",
     "previewUnavailable": "Preview unavailable",
-    "viewerTitle": "{name} original sticker",
+    "viewerTitle": "{name}",
     "viewerDescription": "Use the arrow buttons or keyboard arrow keys to browse the pack.",
     "originals": "Sticker originals",
     "originalUnavailable": "Original unavailable",
-    "itemLabel": "{name} sticker {index}",
-    "fileMeta": "{current} / {total} · original sticker file",
+    "itemLabel": "{name} · Sticker {index}",
+    "fileMeta": "{current} / {total}",
     "openOriginal": "Open original"
   },
   "about": {

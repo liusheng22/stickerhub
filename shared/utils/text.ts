@@ -9,6 +9,15 @@ export function stickerImage(member: Pick<StickerMember, 'thumbUrl' | 'cdnUrl' |
   return member.cdnUrl || member.thumbUrl
 }
 
+export function stickerDisplayName(member: Pick<StickerMember, 'caption' | 'attachedText' | 'displayName' | 'md5'>) {
+  const md5 = member.md5.toLowerCase()
+
+  return [member.caption, member.attachedText, member.displayName]
+    .map(value => value?.trim())
+    .find(value => value && value.toLowerCase() !== md5 && !/^[a-f0-9]{32}$/i.test(value))
+    || null
+}
+
 export function albumCardImage(album: Pick<AlbumSummary, 'iconUrl' | 'bannerUrl' | 'thumbUrl'>) {
   return album.iconUrl || album.bannerUrl || album.thumbUrl
 }

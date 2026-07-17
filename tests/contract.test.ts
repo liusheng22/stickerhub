@@ -9,7 +9,7 @@ import {
   normalizeCopyright,
   stableOffset,
 } from '../shared/utils/related'
-import { albumCardImage, albumDescription, albumHeroImage, stickerImage } from '../shared/utils/text'
+import { albumCardImage, albumDescription, albumHeroImage, stickerDisplayName, stickerImage } from '../shared/utils/text'
 
 describe('public API query contract', () => {
   it('applies the documented default and maximum list size', () => {
@@ -82,6 +82,22 @@ describe('catalog text helpers', () => {
       cdnUrl: 'cdn',
       externUrl: 'extern',
     })).toBe('cdn')
+  })
+
+  it('uses real sticker text without exposing hash identifiers as names', () => {
+    expect(stickerDisplayName({
+      md5: '443c547baae0fcaf42c39dd22d977210',
+      caption: '  收到  ',
+      attachedText: 'OK',
+      displayName: '443c547baae0fcaf42c39dd22d977210',
+    })).toBe('收到')
+
+    expect(stickerDisplayName({
+      md5: '443c547baae0fcaf42c39dd22d977210',
+      caption: null,
+      attachedText: null,
+      displayName: '443c547baae0fcaf42c39dd22d977210',
+    })).toBeNull()
   })
 
   it('uses full-size album artwork before thumbnails', () => {

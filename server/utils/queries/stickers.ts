@@ -480,10 +480,9 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
     }
   }
 
-  const remainingAfterCreator = 4 - groups.flatMap((group) => group.items).length
   const series = deriveSeriesKey(album.packName)
 
-  if (series && remainingAfterCreator > 0) {
+  if (series) {
     const seriesRows = await selectRows(
       `
         SELECT ${albumSummaryColumns}
@@ -514,59 +513,55 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
         selected.add(candidate.productId)
         return true
       })
-      .slice(0, remainingAfterCreator)
+      .slice(0, 4)
 
     if (items.length) {
       groups.push({ reason: 'series', label: `More in the ${series} series`, items })
     }
   }
 
-  const remaining = 4 - groups.flatMap((group) => group.items).length
+  const totalRow = await selectOne('SELECT COUNT(*) AS count FROM app_albums')
+  const total = requiredNumber(totalRow?.count)
+  const fallbackPoolSize = Math.min(total, 240)
+  const windowSize = Math.min(20, Math.max(fallbackPoolSize, 1))
+  const offset = stableOffset(album.productId, Math.max(fallbackPoolSize - windowSize + 1, 1))
+  const fallbackRows = await selectRows(
+    `
+      SELECT ${albumSummaryColumns}
+      FROM app_albums
+      ORDER BY member_count DESC, product_id
+      LIMIT :limit OFFSET :offset
+    `,
+    { limit: windowSize, offset },
+  )
 
-  if (remaining > 0) {
-    const totalRow = await selectOne('SELECT COUNT(*) AS count FROM app_albums')
-    const total = requiredNumber(totalRow?.count)
-    const fallbackPoolSize = Math.min(total, 240)
-    const windowSize = Math.min(Math.max(remaining * 5, 12), Math.max(fallbackPoolSize, 1))
-    const offset = stableOffset(album.productId, Math.max(fallbackPoolSize - windowSize + 1, 1))
-    const fallbackRows = await selectRows(
-      `
-        SELECT ${albumSummaryColumns}
-        FROM app_albums
-        ORDER BY member_count DESC, product_id
-        LIMIT :limit OFFSET :offset
-      `,
-      { limit: windowSize, offset },
+  let candidates = fallbackRows.map(mapAlbumSummary)
+  if (candidates.length < 4 || candidates.filter(candidate => !selected.has(candidate.productId)).length < 4) {
+    candidates = candidates.concat(
+      (await selectRows(
+        `
+          SELECT ${albumSummaryColumns}
+          FROM app_albums
+          ORDER BY member_count DESC, product_id
+          LIMIT :limit
+        `,
+        { limit: windowSize },
+      )).map(mapAlbumSummary),
     )
+  }
 
-    let candidates = fallbackRows.map(mapAlbumSummary)
-    if (candidates.length < remaining || candidates.every((candidate) => selected.has(candidate.productId))) {
-      candidates = candidates.concat(
-        (await selectRows(
-          `
-            SELECT ${albumSummaryColumns}
-            FROM app_albums
-            ORDER BY member_count DESC, product_id
-            LIMIT :limit
-          `,
-          { limit: windowSize },
-        )).map(mapAlbumSummary),
-      )
-    }
+  const fallbackItems = candidates
+    .filter((candidate) => {
+      if (selected.has(candidate.productId)) {
+        return false
+      }
+      selected.add(candidate.productId)
+      return true
+    })
+    .slice(0, 4)
 
-    const items = candidates
-      .filter((candidate) => {
-        if (selected.has(candidate.productId)) {
-          return false
-        }
-        selected.add(candidate.productId)
-        return true
-      })
-      .slice(0, remaining)
-
-    if (items.length) {
-      groups.push({ reason: 'fallback', label: 'More to explore', items })
-    }
+  if (fallbackItems.length) {
+    groups.push({ reason: 'fallback', label: 'More to explore', items: fallbackItems })
   }
 
   return groups

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StickerMember } from '#shared/types/stickers'
-import { stickerImage } from '#shared/utils/text'
+import { stickerDisplayName, stickerImage } from '#shared/utils/text'
 
 const props = defineProps<{
   members: StickerMember[]
@@ -10,6 +10,7 @@ const props = defineProps<{
 const { t } = useI18n()
 const open = defineModel<boolean>('open', { default: false })
 const selectedIndex = defineModel<number>('selectedIndex', { default: 0 })
+const carouselRegion = ref<HTMLElement | null>(null)
 const carouselKey = ref(0)
 const initialIndex = ref(0)
 const thumbnailFallbacks = reactive(new Set<string>())
@@ -17,10 +18,7 @@ const unavailableImages = reactive(new Set<string>())
 
 const currentMember = computed(() => props.members[selectedIndex.value])
 const currentImage = computed(() => currentMember.value ? viewerImage(currentMember.value) : null)
-const currentLabel = computed(() => {
-  const member = currentMember.value
-  return member?.caption || member?.attachedText || member?.displayName || t('sticker.itemLabel', { name: props.albumName, index: selectedIndex.value + 1 })
-})
+const currentLabel = computed(() => currentMember.value ? stickerDisplayName(currentMember.value) : null)
 
 watch(open, (isOpen) => {
   if (!isOpen) return
@@ -46,6 +44,15 @@ function handleImageError(member: StickerMember) {
 
   unavailableImages.add(member.md5)
 }
+
+function handleOpenAutoFocus(event: Event) {
+  event.preventDefault()
+  nextTick(() => {
+    carouselRegion.value
+      ?.querySelector<HTMLElement>('[data-slot="root"]')
+      ?.focus({ preventScroll: true })
+  })
+}
 </script>
 
 <template>
@@ -53,55 +60,77 @@ function handleImageError(member: StickerMember) {
     v-model:open="open"
     :title="t('sticker.viewerTitle', { name: albumName })"
     :description="t('sticker.viewerDescription')"
+    :content="{ onOpenAutoFocus: handleOpenAutoFocus }"
     :ui="{
-      content: 'w-[min(920px,calc(100vw-24px))] max-w-none overflow-hidden border-2 border-ink bg-paper shadow-[8px_8px_0_#171717]',
-      header: 'border-b border-ink px-4 py-3 sm:px-5',
-      body: 'p-0 sm:p-0',
-      footer: 'border-t border-ink px-4 py-3 sm:px-5',
+      content: 'h-[min(700px,calc(100dvh-1rem))] w-[calc(100vw-1rem)] max-w-[860px] overflow-hidden border-2 border-ink bg-paper shadow-[7px_7px_0_#171717] sm:h-[min(720px,calc(100dvh-3rem))]',
+      header: 'min-w-0 shrink-0 border-b border-ink px-4 py-3 pe-16 sm:px-5 sm:pe-16',
+      wrapper: 'min-w-0',
+      title: 'truncate',
+      description: 'line-clamp-2',
+      body: 'min-h-0 min-w-0 overflow-hidden p-0 sm:p-0',
+      footer: 'min-w-0 shrink-0 border-t border-ink px-4 py-3 sm:px-5',
     }"
   >
     <template #body>
-      <UCarousel
-        v-if="members.length"
-        :key="carouselKey"
-        :items="members"
-        :start-index="initialIndex"
-        arrows
-        loop
-        class="bg-lilac p-4 sm:p-7"
-        :prev="{ class: 'border-2 border-ink bg-paper shadow-[3px_3px_0_#171717]' }"
-        :next="{ class: 'border-2 border-ink bg-paper shadow-[3px_3px_0_#171717]' }"
-        :ui="{
-          item: 'basis-full',
-          controls: 'mt-4 justify-center',
-          arrows: 'gap-3',
-        }"
-        :aria-label="t('sticker.originals')"
-        @select="selectedIndex = $event"
-      >
-        <template #default="{ item, index }">
-          <div class="mx-auto grid min-h-[min(66vh,620px)] max-w-[680px] place-items-center rounded-[7px] border-2 border-ink bg-paper p-5 shadow-[6px_6px_0_#171717] sm:p-9">
-            <img
-              v-if="viewerImage(item)"
-              :src="viewerImage(item) || undefined"
-              :alt="item.caption || item.attachedText || item.displayName || t('sticker.itemLabel', { name: albumName, index: index + 1 })"
-              width="480"
-              height="480"
-              class="max-h-[min(54vh,480px)] max-w-full object-contain [image-rendering:auto]"
-              decoding="async"
-              referrerpolicy="no-referrer"
-              @error="handleImageError(item)"
-            >
-            <UIcon v-else name="i-lucide-image-off" class="size-12 text-ink/40" :aria-label="t('sticker.originalUnavailable')" />
-          </div>
-        </template>
-      </UCarousel>
+      <div ref="carouselRegion" class="h-full min-h-0 min-w-0">
+        <UCarousel
+          v-if="members.length"
+          :key="carouselKey"
+          :items="members"
+          :start-index="initialIndex"
+          arrows
+          loop
+          class="h-full min-h-0 min-w-0 bg-lilac p-3 pb-[72px] outline-none sm:p-5 md:p-6"
+          :prev="{
+            size: 'xl',
+            class: 'pointer-events-auto size-11 border-2 border-ink bg-paper text-ink shadow-[3px_3px_0_#171717] hover:bg-brand-50 active:shadow-none focus-visible:ring-4 focus-visible:ring-brand-500/45 disabled:opacity-40',
+          }"
+          :next="{
+            size: 'xl',
+            class: 'pointer-events-auto size-11 border-2 border-ink bg-paper text-ink shadow-[3px_3px_0_#171717] hover:bg-brand-50 active:shadow-none focus-visible:ring-4 focus-visible:ring-brand-500/45 disabled:opacity-40',
+          }"
+          :ui="{
+            viewport: 'h-full min-h-0 min-w-0',
+            container: 'ms-0 h-full min-w-0 items-stretch',
+            item: 'h-full min-w-0 basis-full ps-0',
+            controls: 'pointer-events-none absolute inset-0 z-10',
+            arrows: 'pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-3 sm:static sm:contents',
+            prev: 'static start-auto top-auto translate-y-0 sm:absolute sm:start-8 sm:top-1/2 sm:-translate-y-1/2',
+            next: 'static end-auto top-auto translate-y-0 sm:absolute sm:end-8 sm:top-1/2 sm:-translate-y-1/2',
+          }"
+          :aria-label="t('sticker.originals')"
+          @select="selectedIndex = $event"
+        >
+          <template #default="{ item, index }">
+            <div class="relative mx-auto grid h-full min-h-0 w-full max-w-[720px] place-items-center overflow-hidden rounded-[7px] border-2 border-ink bg-paper p-5 shadow-[5px_5px_0_#171717] sm:p-8 md:p-10">
+              <span
+                class="absolute end-3 top-3 rounded-full border border-ink/20 bg-paper/90 px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-ink/65 shadow-sm backdrop-blur-sm"
+                aria-hidden="true"
+              >
+                {{ index + 1 }} / {{ members.length }}
+              </span>
+              <img
+                v-if="viewerImage(item)"
+                :src="viewerImage(item) || undefined"
+                :alt="stickerDisplayName(item) || t('sticker.itemLabel', { name: albumName, index: String(index + 1).padStart(2, '0') })"
+                width="480"
+                height="480"
+                class="max-h-full max-w-full object-contain [image-rendering:auto]"
+                decoding="async"
+                referrerpolicy="no-referrer"
+                @error="handleImageError(item)"
+              >
+              <UIcon v-else name="i-lucide-image-off" class="size-12 text-ink/40" :aria-label="t('sticker.originalUnavailable')" />
+            </div>
+          </template>
+        </UCarousel>
+      </div>
     </template>
 
     <template #footer>
-      <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div aria-live="polite">
-          <strong class="block text-sm">{{ currentLabel }}</strong>
+      <div class="flex min-w-0 w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0" aria-live="polite">
+          <strong v-if="currentLabel" class="block truncate text-sm">{{ currentLabel }}</strong>
           <span class="font-mono text-xs text-ink/60">{{ t('sticker.fileMeta', { current: selectedIndex + 1, total: members.length }) }}</span>
         </div>
         <UButton
@@ -114,7 +143,7 @@ function handleImageError(member: StickerMember) {
           external
           target="_blank"
           rel="noopener noreferrer"
-          class="border-ink bg-paper"
+          class="w-full shrink-0 justify-center border-ink bg-paper sm:w-auto"
         />
       </div>
     </template>

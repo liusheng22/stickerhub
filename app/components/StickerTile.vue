@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StickerMember } from '#shared/types/stickers'
-import { stickerImage } from '#shared/utils/text'
+import { stickerDisplayName, stickerImage } from '#shared/utils/text'
 
 const props = defineProps<{
   member: StickerMember
@@ -17,7 +17,7 @@ const useThumbnailFallback = ref(false)
 const imageUrl = computed(() => useThumbnailFallback.value
   ? props.member.thumbUrl
   : stickerImage(props.member))
-const label = computed(() => props.member.caption || props.member.attachedText || props.member.displayName || t('sticker.preview', { index: props.index + 1 }))
+const label = computed(() => stickerDisplayName(props.member) || t('sticker.preview', { index: props.index + 1 }))
 
 function handleImageError() {
   if (!useThumbnailFallback.value && props.member.thumbUrl && props.member.thumbUrl !== props.member.cdnUrl) {
@@ -27,15 +27,23 @@ function handleImageError() {
 
   imageFailed.value = true
 }
+
+function handleOpen(event: MouseEvent) {
+  if (event.detail > 0) {
+    (event.currentTarget as HTMLButtonElement).blur()
+  }
+
+  emit('open', props.index)
+}
 </script>
 
 <template>
   <figure class="group m-0 min-w-0 border-b border-r border-ink bg-paper">
     <button
       type="button"
-      class="block w-full text-left outline-none focus-visible:ring-4 focus-visible:ring-brand-500 focus-visible:ring-inset"
+      class="block w-full text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-ink"
       :aria-label="t('sticker.viewFullSize', { label })"
-      @click="emit('open', index)"
+      @click="handleOpen"
     >
       <span class="grid aspect-square place-items-center overflow-hidden bg-paper p-2 sm:p-[13px]">
         <img
