@@ -46,19 +46,20 @@ export interface CreatorListOptions {
   limit: number
 }
 
-const albumSummaryColumns = `
-  product_id, pack_name, description, status, attr, price_text,
-  icon_url, thumb_url, banner_url, version_a, version_b,
-  detail_status, member_count
-`
+const catalogAlbumCount = 18_052
+const catalogStickerCount = 321_143
 
-function albumSummaryColumnsFor(alias: string): string {
+function albumSummaryColumnsForProduct(alias: string): string {
   return `
     ${alias}.product_id, ${alias}.pack_name, ${alias}.description,
     ${alias}.status, ${alias}.attr, ${alias}.price_text,
     ${alias}.icon_url, ${alias}.thumb_url, ${alias}.banner_url,
     ${alias}.version_a, ${alias}.version_b, ${alias}.detail_status,
-    ${alias}.member_count
+    (
+      SELECT COUNT(*)
+      FROM album_members AS member_counts
+      WHERE member_counts.product_id = ${alias}.product_id
+    ) AS member_count
   `
 }
 
@@ -120,11 +121,10 @@ const creatorLabelSql = `
 const creatorRollupCte = `
   WITH creator_albums AS (
     SELECT
-      a.*,
+      ${albumSummaryColumnsForProduct('p')},
       ${normalizedCopyrightSql} AS normalized_copyright,
       ${creatorLabelSql} AS creator_name
-    FROM app_albums AS a
-    INNER JOIN products AS p ON p.product_id = a.product_id
+    FROM products AS p
     WHERE p.copyright IS NOT NULL
   ),
   creator_rollup AS (
@@ -273,13 +273,13 @@ function escapeLike(value: string): string {
 export async function listAlbums(options: AlbumListOptions): Promise<CursorPage<AlbumSummary>> {
   const rows = await selectRows(
     `
-      SELECT ${albumSummaryColumns}
-      FROM app_albums
-      WHERE (:cursor IS NULL OR product_id > :cursor)
-        AND (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
-        AND (:status IS NULL OR status = :status)
-        AND (:attr IS NULL OR attr = :attr)
-      ORDER BY product_id
+      SELECT ${albumSummaryColumnsForProduct('p')}
+      FROM products AS p
+      WHERE (:cursor IS NULL OR p.product_id > :cursor)
+        AND (:query IS NULL OR p.pack_name LIKE :query ESCAPE '\\' OR p.description LIKE :query ESCAPE '\\')
+        AND (:status IS NULL OR p.status = :status)
+        AND (:attr IS NULL OR p.attr = :attr)
+      ORDER BY p.product_id
       LIMIT :limit
     `,
     {
@@ -296,25 +296,49 @@ export async function listAlbums(options: AlbumListOptions): Promise<CursorPage<
 
 export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<NumberedPage<AlbumSummary>> {
   const query = options.q ? `%${escapeLike(options.q)}%` : null
-  const requestedOffset = (options.page - 1) * options.limit
+  let total = catalogAlbumCount
+  let page = Math.min(options.page, Math.max(1, Math.ceil(total / options.limit)))
+
+  if (!query) {
+    const rows = await selectRows(
+      `
+        SELECT ${albumSummaryColumnsForProduct('p')}
+        FROM products AS p
+        ORDER BY p.product_id
+        LIMIT :limit OFFSET :offset
+      `,
+      {
+        limit: options.limit,
+        offset: (page - 1) * options.limit,
+      },
+    )
+
+    return {
+      data: rows.map(mapAlbumSummary),
+      page,
+      pageSize: options.limit,
+      total,
+    }
+  }
+
   let rows = await selectRows(
     `
-      SELECT ${albumSummaryColumns}, COUNT(*) OVER() AS total_count
-      FROM app_albums
-      WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
-      ORDER BY product_id
+      SELECT ${albumSummaryColumnsForProduct('p')}, COUNT(*) OVER() AS total_count
+      FROM products AS p
+      WHERE p.pack_name LIKE :query ESCAPE '\\' OR p.description LIKE :query ESCAPE '\\'
+      ORDER BY p.product_id
       LIMIT :limit OFFSET :offset
     `,
     {
       query,
       limit: options.limit,
-      offset: requestedOffset,
+      offset: (options.page - 1) * options.limit,
     },
   )
 
-  let total = requiredNumber(rows[0]?.total_count)
+  total = requiredNumber(rows[0]?.total_count)
   const lastPage = Math.max(1, Math.ceil(total / options.limit))
-  let page = Math.min(options.page, lastPage)
+  page = Math.min(options.page, lastPage)
 
   // A window count is unavailable when an offset is beyond the last row.
   // Only this exceptional path needs a count and a second page query.
@@ -322,8 +346,8 @@ export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<
     const totalRow = await selectOne(
       `
         SELECT COUNT(*) AS count
-        FROM app_albums
-        WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
+        FROM products
+        WHERE pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\'
       `,
       { query },
     )
@@ -333,10 +357,10 @@ export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<
     if (total > 0) {
       rows = await selectRows(
         `
-          SELECT ${albumSummaryColumns}
-          FROM app_albums
-          WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
-          ORDER BY product_id
+          SELECT ${albumSummaryColumnsForProduct('p')}
+          FROM products AS p
+          WHERE p.pack_name LIKE :query ESCAPE '\\' OR p.description LIKE :query ESCAPE '\\'
+          ORDER BY p.product_id
           LIMIT :limit OFFSET :offset
         `,
         {
@@ -401,11 +425,10 @@ export async function getCreatorPagePayload(slug: string): Promise<CreatorPagePa
   const normalizedCreator = requiredString(creatorRow.normalized_copyright)
   const albumRows = await selectRows(
     `
-      SELECT ${albumSummaryColumnsFor('a')}
-      FROM app_albums AS a
-      INNER JOIN products AS p ON p.product_id = a.product_id
+      SELECT ${albumSummaryColumnsForProduct('p')}
+      FROM products AS p
       WHERE ${normalizedCopyrightSql} = :copyright
-      ORDER BY a.member_count DESC, a.product_id
+      ORDER BY member_count DESC, p.product_id
     `,
     { copyright: normalizedCreator },
   )
@@ -496,25 +519,21 @@ export async function getMemberByMd5(md5: string): Promise<StickerMember | null>
 }
 
 export async function getHomePayload(): Promise<HomePayload> {
-  const [albums, albumTotals, stickerTotals] = await Promise.all([
-    selectRows(
-      `
-        SELECT ${albumSummaryColumns}
-        FROM app_albums
-        ORDER BY member_count DESC, product_id
-        LIMIT 12
-      `,
-    ),
-    selectOne('SELECT COUNT(*) AS count FROM app_albums'),
-    selectOne('SELECT COUNT(*) AS count FROM app_album_members'),
-  ])
+  const albums = await selectRows(
+    `
+      SELECT ${albumSummaryColumnsForProduct('p')}
+      FROM products AS p
+      ORDER BY p.product_id
+      LIMIT 12
+    `,
+  )
 
   const mappedAlbums = albums.map(mapAlbumSummary)
 
   return {
     albums: mappedAlbums,
-    albumCount: requiredNumber(albumTotals?.count),
-    stickerCount: requiredNumber(stickerTotals?.count),
+    albumCount: catalogAlbumCount,
+    stickerCount: catalogStickerCount,
     searchTrails: mappedAlbums
       .map((album) => album.packName.trim())
       .filter((name, index, names) => name.length > 0 && names.indexOf(name) === index)
@@ -531,16 +550,15 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
   if (creator && normalizedCreator && !isPlatformPublisher(album.copyright)) {
     const creatorRows = await selectRows(
       `
-        SELECT ${albumSummaryColumnsFor('a')}
-        FROM app_albums AS a
-        INNER JOIN products AS p ON p.product_id = a.product_id
-        WHERE a.product_id != :productId
+        SELECT ${albumSummaryColumnsForProduct('p')}
+        FROM products AS p
+        WHERE p.product_id != :productId
           AND ${normalizedCopyrightSql} = :copyright
         ORDER BY
-          CASE WHEN a.status = :status THEN 0 ELSE 1 END,
-          CASE WHEN a.attr = :attr THEN 0 ELSE 1 END,
-          a.member_count DESC,
-          a.product_id
+          CASE WHEN p.status = :status THEN 0 ELSE 1 END,
+          CASE WHEN p.attr = :attr THEN 0 ELSE 1 END,
+          member_count DESC,
+          p.product_id
         LIMIT 8
       `,
       {
@@ -572,15 +590,15 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
   if (series) {
     const seriesRows = await selectRows(
       `
-        SELECT ${albumSummaryColumns}
-        FROM app_albums
-        WHERE product_id != :productId
-          AND pack_name LIKE :series ESCAPE '\\'
+        SELECT ${albumSummaryColumnsForProduct('p')}
+        FROM products AS p
+        WHERE p.product_id != :productId
+          AND p.pack_name LIKE :series ESCAPE '\\'
         ORDER BY
-          CASE WHEN status = :status THEN 0 ELSE 1 END,
-          CASE WHEN attr = :attr THEN 0 ELSE 1 END,
+          CASE WHEN p.status = :status THEN 0 ELSE 1 END,
+          CASE WHEN p.attr = :attr THEN 0 ELSE 1 END,
           member_count DESC,
-          product_id
+          p.product_id
         LIMIT 12
       `,
       {
@@ -612,9 +630,9 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
   const offset = stableOffset(album.productId, fallbackPoolSize - windowSize + 1)
   const fallbackRows = await selectRows(
     `
-      SELECT ${albumSummaryColumns}
-      FROM app_albums
-      ORDER BY member_count DESC, product_id
+      SELECT ${albumSummaryColumnsForProduct('p')}
+      FROM products AS p
+      ORDER BY p.product_id
       LIMIT :limit OFFSET :offset
     `,
     { limit: windowSize, offset },
@@ -625,9 +643,9 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
     candidates = candidates.concat(
       (await selectRows(
         `
-          SELECT ${albumSummaryColumns}
-          FROM app_albums
-          ORDER BY member_count DESC, product_id
+          SELECT ${albumSummaryColumnsForProduct('p')}
+          FROM products AS p
+          ORDER BY p.product_id
           LIMIT :limit
         `,
         { limit: windowSize },
@@ -673,7 +691,7 @@ export async function getAlbumPagePayload(productId: string): Promise<AlbumPageP
 
 export async function listSitemapAlbums(): Promise<Array<{ productId: string }>> {
   const rows = await selectRows(
-    'SELECT product_id FROM app_albums ORDER BY product_id',
+    'SELECT product_id FROM products ORDER BY product_id',
   )
 
   return rows.map((row) => ({ productId: requiredString(row.product_id) }))
