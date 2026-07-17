@@ -1,11 +1,14 @@
 # StickerHub
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 StickerHub is a Nuxt 4 sticker pack destination for browsing, searching, previewing, and downloading a large collection of sticker packs.
 
 ## Live preview
 
 - [Official site](https://stickerhub.lius.me)
 - [Vercel deployment](https://wxsticker.vercel.app)
+- [Cloudflare Workers deployment guide](./docs/deployment.md)
 
 ## What this project is
 
@@ -64,6 +67,7 @@ For local data, set `STICKERMART_SQLITE_PATH` to the Turso SQLite snapshot. For 
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm run build:cloudflare
 ```
 
 ## Documentation
