@@ -26,7 +26,7 @@ const stage = computed(() => stages[props.index % stages.length])
     class="group h-full overflow-hidden border-ink/15 bg-paper transition-shadow duration-200 hover:shadow-[4px_4px_0_#171717] focus-within:shadow-[4px_4px_0_#171717]"
     :ui="{ body: 'p-0 sm:p-0' }"
   >
-    <NuxtLink class="block h-full focus-visible:outline-offset-[-4px]" :to="localePath({ name: 'albums-productId', params: { productId: album.productId } })" :aria-label="t('cards.browseAlbum', { name: album.packName })">
+    <NuxtLink class="block h-full focus-visible:outline-offset-[-4px]" :to="localePath({ name: 'albums-productId', params: { productId: album.productId } })" no-prefetch :aria-label="t('cards.browseAlbum', { name: album.packName })">
       <div class="grid place-items-center overflow-hidden border-b border-ink/15" :class="[stage, squareStage ? 'aspect-square' : 'aspect-[1/0.82]']">
         <img
           v-if="imageUrl && !imageFailed"

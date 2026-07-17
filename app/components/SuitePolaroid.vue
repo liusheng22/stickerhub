@@ -22,6 +22,7 @@ const imageUrl = computed(() => albumCardImage(props.album))
   >
     <NuxtLink
       :to="localePath({ name: 'albums-productId', params: { productId: album.productId } })"
+      no-prefetch
       class="block focus-visible:outline-offset-[-4px]"
       :aria-label="t('cards.openAlbum', { name: album.packName })"
     >

@@ -12,7 +12,6 @@ const { data, error } = await useFetch<CreatorPagePayload>(() => `/api/site/crea
 if (error.value || !data.value) {
   throw createError({
     statusCode: error.value?.statusCode === 404 ? 404 : 503,
-    statusMessage: error.value?.statusCode === 404 ? t('creator.notFound') : t('pageLabels.creators'),
     message: error.value?.statusCode === 404 ? t('creator.notAvailable') : t('creators.unavailable'),
   })
 }

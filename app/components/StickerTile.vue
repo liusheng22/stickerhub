@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { StickerMember } from '#shared/types/stickers'
+import type { StickerPreview } from '#shared/types/stickers'
 import { stickerDisplayName, stickerImage } from '#shared/utils/text'
 
 const props = defineProps<{
-  member: StickerMember
+  member: StickerPreview
   index: number
 }>()
 

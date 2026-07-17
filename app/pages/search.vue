@@ -20,7 +20,7 @@ const [{ data, error, pending }, { data: homeData }] = await Promise.all([
 ])
 
 if (error.value || !data.value) {
-  throw createError({ statusCode: 503, statusMessage: t('pageLabels.search'), message: t('search.unavailable') })
+  throw createError({ statusCode: 503, message: t('search.unavailable') })
 }
 
 const page = computed(() => data.value as CursorPage<AlbumSummary>)

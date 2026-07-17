@@ -34,6 +34,11 @@ export async function withApiErrorBoundary<T>(
       return { error: { code: error.code, message: error.message } }
     }
 
+    console.error('Unhandled API error', {
+      method: event.method,
+      path: event.path,
+      error,
+    })
     setResponseStatus(event, 500)
     return {
       error: {

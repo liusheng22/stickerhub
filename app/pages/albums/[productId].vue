@@ -16,7 +16,6 @@ const { data, error } = await useFetch<AlbumPagePayload>(() => `/api/site/albums
 if (error.value || !data.value) {
   throw createError({
     statusCode: error.value?.statusCode === 404 ? 404 : 503,
-    statusMessage: error.value?.statusCode === 404 ? '404' : t('pageLabels.catalog'),
     message: error.value?.statusCode === 404 ? t('album.notAvailable') : t('common.catalogUnavailable'),
   })
 }

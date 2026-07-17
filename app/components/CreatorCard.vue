@@ -20,6 +20,7 @@ const localePath = useLocalePath()
   >
     <NuxtLink
       :to="localePath({ name: 'creators-creatorSlug', params: { creatorSlug: creator.slug } })"
+      no-prefetch
       class="block h-full focus-visible:outline-offset-[-4px]"
       :aria-label="t('creators.cardLabel', { name: creator.name })"
     >

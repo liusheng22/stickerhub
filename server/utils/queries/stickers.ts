@@ -9,6 +9,7 @@ import type {
   NumberedPage,
   RelatedAlbumGroup,
   StickerMember,
+  StickerPreview,
 } from '#shared/types/stickers'
 import {
   creatorLabel,
@@ -65,6 +66,11 @@ const safeMemberColumns = `
   product_id, pack_name, member_index, md5, display_name,
   caption, attached_text, cdn_url, thumb_url, extern_url,
   extern_md5, file_size, attr
+`
+
+const stickerPreviewColumns = `
+  member_index, md5, display_name, caption, attached_text,
+  cdn_url, thumb_url
 `
 
 const normalizedCopyrightSql = `
@@ -222,6 +228,18 @@ function mapMember(row: Record<string, unknown>): StickerMember {
   }
 }
 
+function mapStickerPreview(row: Record<string, unknown>): StickerPreview {
+  return {
+    memberIndex: asNumber(row.member_index),
+    md5: requiredString(row.md5),
+    displayName: asString(row.display_name),
+    caption: asString(row.caption),
+    attachedText: asString(row.attached_text),
+    cdnUrl: asPublicUrl(row.cdn_url),
+    thumbUrl: asPublicUrl(row.thumb_url),
+  }
+}
+
 function mapCreatorSummary(row: Record<string, unknown>): CreatorSummary {
   const name = requiredString(row.creator_name)
   return {
@@ -278,20 +296,10 @@ export async function listAlbums(options: AlbumListOptions): Promise<CursorPage<
 
 export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<NumberedPage<AlbumSummary>> {
   const query = options.q ? `%${escapeLike(options.q)}%` : null
-  const totalRow = await selectOne(
+  const requestedOffset = (options.page - 1) * options.limit
+  let rows = await selectRows(
     `
-      SELECT COUNT(*) AS count
-      FROM app_albums
-      WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
-    `,
-    { query },
-  )
-  const total = requiredNumber(totalRow?.count)
-  const lastPage = Math.max(1, Math.ceil(total / options.limit))
-  const page = Math.min(options.page, lastPage)
-  const rows = await selectRows(
-    `
-      SELECT ${albumSummaryColumns}
+      SELECT ${albumSummaryColumns}, COUNT(*) OVER() AS total_count
       FROM app_albums
       WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
       ORDER BY product_id
@@ -300,9 +308,45 @@ export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<
     {
       query,
       limit: options.limit,
-      offset: (page - 1) * options.limit,
+      offset: requestedOffset,
     },
   )
+
+  let total = requiredNumber(rows[0]?.total_count)
+  const lastPage = Math.max(1, Math.ceil(total / options.limit))
+  let page = Math.min(options.page, lastPage)
+
+  // A window count is unavailable when an offset is beyond the last row.
+  // Only this exceptional path needs a count and a second page query.
+  if (rows.length === 0 && options.page > 1) {
+    const totalRow = await selectOne(
+      `
+        SELECT COUNT(*) AS count
+        FROM app_albums
+        WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
+      `,
+      { query },
+    )
+    total = requiredNumber(totalRow?.count)
+    page = Math.max(1, Math.ceil(total / options.limit))
+
+    if (total > 0) {
+      rows = await selectRows(
+        `
+          SELECT ${albumSummaryColumns}
+          FROM app_albums
+          WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
+          ORDER BY product_id
+          LIMIT :limit OFFSET :offset
+        `,
+        {
+          query,
+          limit: options.limit,
+          offset: (page - 1) * options.limit,
+        },
+      )
+    }
+  }
 
   return {
     data: rows.map(mapAlbumSummary),
@@ -416,10 +460,10 @@ export async function listAlbumMembers(
   return toCursorPage(rows.map(mapMember), options.limit, 'md5')
 }
 
-export async function listAlbumMembersInPackOrder(productId: string): Promise<StickerMember[]> {
+export async function listAlbumMembersInPackOrder(productId: string): Promise<StickerPreview[]> {
   const rows = await selectRows(
     `
-      SELECT ${safeMemberColumns}
+      SELECT ${stickerPreviewColumns}
       FROM app_album_members
       WHERE product_id = :productId
       ORDER BY
@@ -430,7 +474,7 @@ export async function listAlbumMembersInPackOrder(productId: string): Promise<St
     { productId },
   )
 
-  return rows.map(mapMember)
+  return rows.map(mapStickerPreview)
 }
 
 export async function getMemberByMd5(md5: string): Promise<StickerMember | null> {
@@ -563,11 +607,9 @@ async function getRelatedAlbumGroups(album: AlbumDetail): Promise<RelatedAlbumGr
     }
   }
 
-  const totalRow = await selectOne('SELECT COUNT(*) AS count FROM app_albums')
-  const total = requiredNumber(totalRow?.count)
-  const fallbackPoolSize = Math.min(total, 240)
-  const windowSize = Math.min(20, Math.max(fallbackPoolSize, 1))
-  const offset = stableOffset(album.productId, Math.max(fallbackPoolSize - windowSize + 1, 1))
+  const fallbackPoolSize = 240
+  const windowSize = 20
+  const offset = stableOffset(album.productId, fallbackPoolSize - windowSize + 1)
   const fallbackRows = await selectRows(
     `
       SELECT ${albumSummaryColumns}

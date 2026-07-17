@@ -5,7 +5,7 @@ export function albumDescription(packName: string, description: string | null, m
     || `Browse ${packName}, a chat sticker pack with ${memberCount.toLocaleString('en-US')} stickers.`
 }
 
-export function stickerImage(member: Pick<StickerMember, 'thumbUrl' | 'cdnUrl' | 'externUrl'>) {
+export function stickerImage(member: Pick<StickerMember, 'thumbUrl' | 'cdnUrl'>) {
   return member.cdnUrl || member.thumbUrl
 }
 

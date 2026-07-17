@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { StickerMember } from '#shared/types/stickers'
+import type { StickerPreview } from '#shared/types/stickers'
 import { stickerDisplayName, stickerImage } from '#shared/utils/text'
 
 const props = defineProps<{
-  members: StickerMember[]
+  members: StickerPreview[]
   albumName: string
 }>()
 
@@ -26,7 +26,7 @@ watch(open, (isOpen) => {
   carouselKey.value += 1
 })
 
-function viewerImage(member: StickerMember) {
+function viewerImage(member: StickerPreview) {
   if (unavailableImages.has(member.md5)) {
     return null
   }
@@ -36,7 +36,7 @@ function viewerImage(member: StickerMember) {
     : stickerImage(member)
 }
 
-function handleImageError(member: StickerMember) {
+function handleImageError(member: StickerPreview) {
   if (!thumbnailFallbacks.has(member.md5) && member.thumbUrl && member.thumbUrl !== member.cdnUrl) {
     thumbnailFallbacks.add(member.md5)
     return

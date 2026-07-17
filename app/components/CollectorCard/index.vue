@@ -29,6 +29,7 @@ const stageColor = computed(() => stageColors[(props.position - 1) % stageColors
     <NuxtLink
       class="block p-2.5 focus-visible:outline-offset-[-4px]"
       :to="localePath({ name: 'albums-productId', params: { productId: album.productId } })"
+      no-prefetch
       :aria-label="t('cards.openAlbum', { name: album.packName })"
     >
       <div class="grid aspect-square place-items-center overflow-hidden rounded-[4px] border border-ink" :class="stageColor">

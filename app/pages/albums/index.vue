@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AlbumSummary, HomePayload, NumberedPage } from '#shared/types/stickers'
+import type { AlbumSummary, NumberedPage } from '#shared/types/stickers'
 
 const route = useRoute()
 const { locale, t } = useI18n()
@@ -16,15 +16,12 @@ const requestQuery = computed(() => ({
   limit: 24,
 }))
 
-const [{ data, error }, { data: homeData }] = await Promise.all([
-  useFetch<NumberedPage<AlbumSummary>>('/api/site/albums', {
-    key: 'sticker-pack-catalog', query: requestQuery, watch: [requestQuery],
-  }),
-  useFetch<HomePayload>('/api/site/home', { key: 'album-count-for-catalog' }),
-])
+const { data, error } = await useFetch<NumberedPage<AlbumSummary>>('/api/site/albums', {
+  key: 'sticker-pack-catalog', query: requestQuery,
+})
 
 if (error.value || !data.value) {
-  throw createError({ statusCode: 503, statusMessage: t('pageLabels.catalog'), message: t('common.catalogUnavailable') })
+  throw createError({ statusCode: 503, message: t('common.catalogUnavailable') })
 }
 
 const page = computed(() => data.value as NumberedPage<AlbumSummary>)
@@ -90,7 +87,7 @@ useSeoMeta({ title: () => t('seo.albums.title'), description: () => t('seo.album
             <UButton type="submit" :label="t('albums.searchSubmit')" size="xl" class="offset-action max-[560px]:mt-1" />
           </div>
         </UForm>
-        <span class="inline-flex min-h-12 shrink-0 items-center border-l border-ink/20 pl-5 font-mono text-xs max-[900px]:min-h-0 max-[900px]:border-l-0 max-[900px]:border-t max-[900px]:pl-0 max-[900px]:pt-3">{{ t('albums.catalogStats', { count: homeData?.albumCount.toLocaleString(locale) || '18,052' }) }}</span>
+        <span class="inline-flex min-h-12 shrink-0 items-center border-l border-ink/20 pl-5 font-mono text-xs max-[900px]:min-h-0 max-[900px]:border-l-0 max-[900px]:border-t max-[900px]:pl-0 max-[900px]:pt-3">{{ t('albums.catalogStats', { count: page.total.toLocaleString(locale) }) }}</span>
       </UContainer>
     </section>
 

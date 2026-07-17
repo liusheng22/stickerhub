@@ -39,6 +39,16 @@ export interface StickerMember {
   attr: number | null
 }
 
+export type StickerPreview = Pick<StickerMember,
+  | 'memberIndex'
+  | 'md5'
+  | 'displayName'
+  | 'caption'
+  | 'attachedText'
+  | 'cdnUrl'
+  | 'thumbUrl'
+>
+
 export interface CursorPage<T> {
   data: T[]
   nextCursor: string | null
@@ -81,6 +91,6 @@ export interface RelatedAlbumGroup {
 
 export interface AlbumPagePayload {
   album: AlbumDetail
-  members: StickerMember[]
+  members: StickerPreview[]
   relatedGroups: RelatedAlbumGroup[]
 }

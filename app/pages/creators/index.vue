@@ -20,7 +20,7 @@ const { data, error, pending } = await useAsyncData(creatorKey, () => $fetch<Cur
 })
 
 if (error.value || !data.value) {
-  throw createError({ statusCode: 503, statusMessage: t('pageLabels.creators'), message: t('creators.unavailable') })
+  throw createError({ statusCode: 503, message: t('creators.unavailable') })
 }
 
 const page = computed(() => data.value as CursorPage<CreatorSummary>)

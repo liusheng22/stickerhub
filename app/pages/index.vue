@@ -6,7 +6,7 @@ const localePath = useLocalePath()
 const { data, error } = await useFetch<HomePayload>('/api/site/home', { key: 'sticker-hub-home' })
 
 if (error.value || !data.value) {
-  throw createError({ statusCode: 503, statusMessage: t('pageLabels.catalog'), message: t('common.catalogUnavailable') })
+  throw createError({ statusCode: 503, message: t('common.catalogUnavailable') })
 }
 
 const home = computed(() => data.value as HomePayload)
