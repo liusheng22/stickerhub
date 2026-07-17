@@ -15,17 +15,18 @@ const requestQuery = computed(() => ({
   page: requestedPage.value,
   limit: 24,
 }))
+const catalogKey = computed(() => `sticker-pack-catalog:${requestQuery.value.q || 'all'}:${requestedPage.value}`)
 
-const { data, error } = await useFetch<NumberedPage<AlbumSummary>>('/api/site/albums', {
-  key: 'sticker-pack-catalog', query: requestQuery,
-})
+const { data, error, pending } = await useAsyncData(catalogKey, () => $fetch<NumberedPage<AlbumSummary>>('/api/site/albums', {
+  query: requestQuery.value,
+}))
 
 if (error.value || !data.value) {
   throw createError({ statusCode: 503, message: t('common.catalogUnavailable') })
 }
 
 const page = computed(() => data.value as NumberedPage<AlbumSummary>)
-const currentPage = computed(() => page.value.page)
+const currentPage = requestedPage
 const totalPages = computed(() => Math.max(1, Math.ceil(page.value.total / page.value.pageSize)))
 const hasPreviousPage = computed(() => currentPage.value > 1)
 const hasNextPage = computed(() => currentPage.value < totalPages.value)
@@ -43,8 +44,8 @@ const paginationTo = (targetPage: number) => localePath({
   },
 })
 
-if (requestedPage.value !== currentPage.value) {
-  await navigateTo(paginationTo(currentPage.value), { replace: true, redirectCode: 302 })
+if (requestedPage.value !== page.value.page) {
+  await navigateTo(paginationTo(page.value.page), { replace: true, redirectCode: 302 })
 }
 
 async function applySearch() {
@@ -101,9 +102,16 @@ useSeoMeta({ title: () => t('seo.albums.title'), description: () => t('seo.album
           <UBadge color="neutral" variant="outline" class="border-ink bg-paper font-mono">{{ route.query.q ? t('albums.searchBadge', { query: route.query.q }) : t('albums.catalogOrder') }}</UBadge>
         </div>
 
-        <AlbumGrid :albums="page.data" :empty-title="t('albums.emptyTitle')" :empty-text="t('albums.emptyDescription')" />
+        <div v-if="pending" class="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" :aria-label="t('common.loading')" aria-live="polite">
+          <UCard v-for="index in 8" :key="index" variant="outline" class="overflow-hidden border-ink/15 bg-paper" :ui="{ body: 'space-y-3 p-3 sm:p-3' }">
+            <USkeleton class="aspect-square w-full rounded-[5px]" />
+            <USkeleton class="h-5 w-2/3" />
+            <USkeleton class="h-4 w-full" />
+          </UCard>
+        </div>
+        <AlbumGrid v-else :albums="page.data" :empty-title="t('albums.emptyTitle')" :empty-text="t('albums.emptyDescription')" />
 
-        <nav v-if="page.total > page.pageSize" class="mt-10" :aria-label="t('albums.pagination')">
+        <nav v-if="page.total > page.pageSize" class="mt-10" :class="pending && 'pointer-events-none opacity-60'" :aria-busy="pending" :aria-label="t('albums.pagination')">
           <div class="hidden items-center justify-center gap-2 sm:flex">
             <UButton
               :label="t('albums.previous')"
