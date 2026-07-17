@@ -33,11 +33,22 @@ const optionalCursorSchema = z.preprocess(
   z.string().min(1).max(512).optional(),
 )
 
+const pageSchema = z.preprocess(
+  (value) => value === undefined ? 1 : typeof value === 'string' ? Number(value) : value,
+  z.number().int().min(1).max(10_000),
+)
+
 export const albumListQuerySchema = z.object({
   q: optionalSearchSchema,
   status: optionalIntegerSchema,
   attr: optionalIntegerSchema,
   cursor: optionalCursorSchema,
+  limit: limitSchema,
+})
+
+export const siteAlbumPageQuerySchema = z.object({
+  q: optionalSearchSchema,
+  page: pageSchema,
   limit: limitSchema,
 })
 
@@ -92,6 +103,10 @@ function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown): T {
 
 export function readAlbumListQuery(event: H3Event) {
   return parseOrThrow(albumListQuerySchema, getQuery(event))
+}
+
+export function readSiteAlbumPageQuery(event: H3Event) {
+  return parseOrThrow(siteAlbumPageQuerySchema, getQuery(event))
 }
 
 export function readMemberListQuery(event: H3Event) {

@@ -134,7 +134,10 @@
     "inView": "{count} packs on this page.",
     "searchBadge": "Keyword: {query}",
     "catalogOrder": "All packs",
+    "previous": "Previous",
     "next": "Next page",
+    "pagination": "Sticker album pages",
+    "pageStatus": "{page} of {total}",
     "emptyTitle": "No matching sticker packs",
     "emptyDescription": "Try another keyword or browse all packs."
   },

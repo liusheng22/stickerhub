@@ -6,6 +6,7 @@ import type {
   CreatorSummary,
   CursorPage,
   HomePayload,
+  NumberedPage,
   RelatedAlbumGroup,
   StickerMember,
 } from '#shared/types/stickers'
@@ -24,6 +25,12 @@ export interface AlbumListOptions {
   status?: number
   attr?: number
   cursor?: string
+  limit: number
+}
+
+export interface SiteAlbumPageOptions {
+  q?: string
+  page: number
   limit: number
 }
 
@@ -267,6 +274,42 @@ export async function listAlbums(options: AlbumListOptions): Promise<CursorPage<
   )
 
   return toCursorPage(rows.map(mapAlbumSummary), options.limit, 'productId')
+}
+
+export async function listSiteAlbumPage(options: SiteAlbumPageOptions): Promise<NumberedPage<AlbumSummary>> {
+  const query = options.q ? `%${escapeLike(options.q)}%` : null
+  const totalRow = await selectOne(
+    `
+      SELECT COUNT(*) AS count
+      FROM app_albums
+      WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
+    `,
+    { query },
+  )
+  const total = requiredNumber(totalRow?.count)
+  const lastPage = Math.max(1, Math.ceil(total / options.limit))
+  const page = Math.min(options.page, lastPage)
+  const rows = await selectRows(
+    `
+      SELECT ${albumSummaryColumns}
+      FROM app_albums
+      WHERE (:query IS NULL OR pack_name LIKE :query ESCAPE '\\' OR description LIKE :query ESCAPE '\\')
+      ORDER BY product_id
+      LIMIT :limit OFFSET :offset
+    `,
+    {
+      query,
+      limit: options.limit,
+      offset: (page - 1) * options.limit,
+    },
+  )
+
+  return {
+    data: rows.map(mapAlbumSummary),
+    page,
+    pageSize: options.limit,
+    total,
+  }
 }
 
 export async function listCreators(options: CreatorListOptions): Promise<CursorPage<CreatorSummary>> {

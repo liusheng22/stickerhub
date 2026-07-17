@@ -44,6 +44,13 @@ export interface CursorPage<T> {
   nextCursor: string | null
 }
 
+export interface NumberedPage<T> {
+  data: T[]
+  page: number
+  pageSize: number
+  total: number
+}
+
 export interface HomePayload {
   albums: AlbumSummary[]
   albumCount: number

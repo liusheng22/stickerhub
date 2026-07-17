@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { albumListQuerySchema, creatorListQuerySchema, memberListQuerySchema } from '../server/utils/api/validation'
+import { albumListQuerySchema, creatorListQuerySchema, memberListQuerySchema, siteAlbumPageQuerySchema } from '../server/utils/api/validation'
 import { openApiDocument } from '../server/utils/openapi'
 import {
   creatorLabel,
@@ -46,6 +46,13 @@ describe('public API query contract', () => {
       limit: 5,
     })
     expect(creatorListQuerySchema.safeParse({ cursor: 'a'.repeat(513) }).success).toBe(false)
+  })
+
+  it('validates numbered pagination for the site catalog separately', () => {
+    expect(siteAlbumPageQuerySchema.parse({ page: '2', limit: '24' })).toEqual({ page: 2, limit: 24 })
+    expect(siteAlbumPageQuerySchema.parse({}).page).toBe(1)
+    expect(siteAlbumPageQuerySchema.safeParse({ page: 0 }).success).toBe(false)
+    expect(siteAlbumPageQuerySchema.safeParse({ page: '2.5' }).success).toBe(false)
   })
 })
 

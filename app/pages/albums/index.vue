@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import type { AlbumSummary, CursorPage, HomePayload } from '#shared/types/stickers'
+import type { AlbumSummary, HomePayload, NumberedPage } from '#shared/types/stickers'
 
 const route = useRoute()
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
 const queryString = (value: unknown) => typeof value === 'string' ? value : ''
 const q = ref(queryString(route.query.q))
+const requestedPage = computed(() => Math.max(1, Number.parseInt(queryString(route.query.page) || '1', 10) || 1))
 
 watch(() => route.query.q, (value) => { q.value = queryString(value) })
 
 const requestQuery = computed(() => ({
   q: queryString(route.query.q) || undefined,
-  cursor: queryString(route.query.cursor) || undefined,
+  page: requestedPage.value,
   limit: 24,
 }))
 
 const [{ data, error }, { data: homeData }] = await Promise.all([
-  useFetch<CursorPage<AlbumSummary>>('/api/site/albums', {
+  useFetch<NumberedPage<AlbumSummary>>('/api/site/albums', {
     key: 'sticker-pack-catalog', query: requestQuery, watch: [requestQuery],
   }),
   useFetch<HomePayload>('/api/site/home', { key: 'album-count-for-catalog' }),
@@ -26,22 +27,28 @@ if (error.value || !data.value) {
   throw createError({ statusCode: 503, statusMessage: t('pageLabels.catalog'), message: t('common.catalogUnavailable') })
 }
 
-const page = computed(() => data.value as CursorPage<AlbumSummary>)
-const currentPage = computed(() => Math.max(1, Number.parseInt(queryString(route.query.page) || '1', 10) || 1))
+const page = computed(() => data.value as NumberedPage<AlbumSummary>)
+const currentPage = computed(() => page.value.page)
+const totalPages = computed(() => Math.max(1, Math.ceil(page.value.total / page.value.pageSize)))
+const hasPreviousPage = computed(() => currentPage.value > 1)
+const hasNextPage = computed(() => currentPage.value < totalPages.value)
 const decorativeAlbums = computed(() => {
   const albums = page.value.data
   if (!albums.length) return []
   if (albums.length < 4) return [albums[0]]
   return [albums[Math.floor((albums.length - 1) * .2)], albums[Math.floor((albums.length - 1) * .6)]]
 })
-const nextPage = computed(() => ({
-  name: 'albums' as const,
+const paginationTo = (targetPage: number) => localePath({
+  name: 'albums',
   query: {
     q: queryString(route.query.q) || undefined,
-    cursor: page.value.nextCursor || undefined,
-    page: currentPage.value + 1,
+    page: targetPage > 1 ? targetPage : undefined,
   },
-}))
+})
+
+if (requestedPage.value !== currentPage.value) {
+  await navigateTo(paginationTo(currentPage.value), { replace: true, redirectCode: 302 })
+}
 
 async function applySearch() {
   await navigateTo(localePath({ name: 'albums', query: { q: q.value.trim() || undefined } }))
@@ -99,9 +106,76 @@ useSeoMeta({ title: () => t('seo.albums.title'), description: () => t('seo.album
 
         <AlbumGrid :albums="page.data" :empty-title="t('albums.emptyTitle')" :empty-text="t('albums.emptyDescription')" />
 
-        <nav v-if="page.nextCursor" class="mt-[42px] flex items-center justify-center gap-2" :aria-label="t('albums.next')">
-          <span class="grid min-h-[42px] min-w-[42px] place-items-center rounded-[6px] border border-ink bg-brand-500 font-mono font-bold shadow-[3px_3px_0_#171717]" aria-current="page">{{ currentPage }}</span>
-          <UButton :label="t('albums.next')" trailing-icon="i-lucide-arrow-right" color="neutral" variant="outline" :to="localePath(nextPage)" class="border-ink bg-paper" />
+        <nav v-if="page.total > page.pageSize" class="mt-10" :aria-label="t('albums.pagination')">
+          <div class="hidden items-center justify-center gap-2 sm:flex">
+            <UButton
+              :label="t('albums.previous')"
+              icon="i-lucide-arrow-left"
+              color="neutral"
+              variant="ghost"
+              size="md"
+              :disabled="!hasPreviousPage"
+              :to="hasPreviousPage ? paginationTo(currentPage - 1) : undefined"
+              class="min-h-11 px-3 font-semibold text-ink/65 hover:bg-mint/45 hover:text-ink disabled:opacity-30"
+            />
+
+            <UPagination
+              :page="currentPage"
+              :total="page.total"
+              :items-per-page="page.pageSize"
+              :sibling-count="1"
+              :show-controls="false"
+              show-edges
+              :to="paginationTo"
+              size="md"
+              color="neutral"
+              variant="ghost"
+              active-color="neutral"
+              active-variant="solid"
+              :ui="{
+                list: 'gap-1',
+                item: '[&_a]:min-h-11 [&_a]:min-w-11 [&_a]:font-mono [&_a]:font-bold',
+                ellipsis: '[&_div]:min-h-11 [&_div]:min-w-8 [&_div]:border-0 [&_div]:bg-transparent [&_div]:shadow-none',
+              }"
+            />
+
+            <UButton
+              :label="t('albums.next')"
+              trailing-icon="i-lucide-arrow-right"
+              color="neutral"
+              variant="ghost"
+              size="md"
+              :disabled="!hasNextPage"
+              :to="hasNextPage ? paginationTo(currentPage + 1) : undefined"
+              class="min-h-11 px-3 font-semibold text-ink/65 hover:bg-mint/45 hover:text-ink disabled:opacity-30"
+            />
+          </div>
+
+          <div class="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-3 sm:hidden">
+            <UButton
+              icon="i-lucide-arrow-left"
+              :aria-label="t('albums.previous')"
+              color="neutral"
+              variant="outline"
+              size="lg"
+              square
+              :disabled="!hasPreviousPage"
+              :to="hasPreviousPage ? paginationTo(currentPage - 1) : undefined"
+              class="border-ink/25 bg-paper"
+            />
+            <span class="text-center font-mono text-sm font-bold tabular-nums text-ink/65">{{ t('albums.pageStatus', { page: currentPage, total: totalPages }) }}</span>
+            <UButton
+              icon="i-lucide-arrow-right"
+              :aria-label="t('albums.next')"
+              color="neutral"
+              variant="outline"
+              size="lg"
+              square
+              :disabled="!hasNextPage"
+              :to="hasNextPage ? paginationTo(currentPage + 1) : undefined"
+              class="border-ink/25 bg-paper"
+            />
+          </div>
         </nav>
       </UContainer>
     </section>
