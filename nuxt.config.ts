@@ -23,6 +23,8 @@ const securityHeaders = {
   'X-Frame-Options': 'DENY',
 }
 
+const wxemoticonCacheControl = 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-13',
   devtools: { enabled: true },
@@ -202,6 +204,9 @@ export default defineNuxtConfig({
     '/search/_payload.json': { cache: false },
     '/support': cachedInProduction(600),
     '/api/site/**': cachedInProduction(300),
+    '/api/integrations/wxemoticon/albums/**': {
+      headers: { ...securityHeaders, 'Cache-Control': wxemoticonCacheControl },
+    },
     '/en': cachedInProduction(600),
     '/en/albums': { cache: false },
     '/en/albums/_payload.json': { cache: false },
@@ -213,6 +218,7 @@ export default defineNuxtConfig({
     '/en/search/_payload.json': { cache: false },
     '/en/support': cachedInProduction(600),
     '/api/admin/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
+    '/admin/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/api/v1/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/api/webhooks/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/docs': { robots: false },

@@ -78,6 +78,7 @@ pnpm run build:cloudflare
 - [开发者接入](./docs/developer-access.md)
 - [部署指南](./docs/deployment.md)
 - [管理后台](./docs/admin-console.md)
+- [wxemoticon 集成接口](./docs/wxemoticon-integration.md)
 
 ## 说明
 

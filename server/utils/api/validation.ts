@@ -64,6 +64,14 @@ export const creatorListQuerySchema = z.object({
 })
 
 const productIdSchema = z.string().trim().min(1).max(512)
+export const wxemoticonProductIdSchema = z.string()
+  .trim()
+  .min(1)
+  .max(512)
+  .regex(
+    /^com\.tencent\.xin\.emoticon\.[A-Za-z0-9._-]+$/,
+    'productId must be a valid WeChat sticker pack identifier',
+  )
 const creatorSlugSchema = z.string().trim().min(1).max(160)
 const md5Schema = z.string().regex(/^[a-fA-F0-9]{32}$/, 'md5 must be a 32-character hexadecimal value')
 const apiKeyIdSchema = z.string().regex(/^key_[A-Za-z0-9_-]{16}$/, 'API key ID is invalid')
@@ -119,6 +127,10 @@ export function readCreatorListQuery(event: H3Event) {
 
 export function readProductId(event: H3Event) {
   return parseOrThrow(productIdSchema, getRouterParam(event, 'productId'))
+}
+
+export function readWxemoticonProductId(event: H3Event) {
+  return parseOrThrow(wxemoticonProductIdSchema, getRouterParam(event, 'productId'))
 }
 
 export function readCreatorSlug(event: H3Event) {

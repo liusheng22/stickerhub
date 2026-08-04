@@ -78,6 +78,7 @@ Formal, git-tracked project documentation lives in [`docs/`](./docs/):
 - [Developer access](./docs/developer-access.md)
 - [Deployment](./docs/deployment.md)
 - [Admin console](./docs/admin-console.md)
+- [wxemoticon integration](./docs/wxemoticon-integration.md)
 
 ## Notes
 

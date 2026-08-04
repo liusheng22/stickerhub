@@ -36,6 +36,8 @@ Current public routes:
 | `GET /api/v1/albums/:productId/members` | List members for one pack |
 | `GET /api/v1/members/:md5` | Read one member |
 
+wxemoticon uses a separate anonymous integration contract at `GET /api/integrations/wxemoticon/albums/:productId`. It accepts one exact locally known WeChat product ID and is not a replacement for the authenticated catalog API. See [wxemoticon integration](./wxemoticon-integration.md).
+
 ## Authentication
 
 Send the issued key in the `X-API-Key` header:
