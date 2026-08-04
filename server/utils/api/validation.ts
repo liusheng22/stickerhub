@@ -85,6 +85,7 @@ export const missingAlbumFeedbackBodySchema = z.object({
   expectedMemberCount: z.number().int().min(0).max(1_000),
   members: z.array(missingAlbumMemberSchema).max(1_000),
   clientVersion: z.string().trim().min(1).max(40),
+  contactEmail: z.string().trim().email().max(320).optional(),
 }).superRefine((value, context) => {
   const seen = new Set<string>()
   for (const member of value.members) {

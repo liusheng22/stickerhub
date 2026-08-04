@@ -12,6 +12,7 @@ export interface IntegrationAccessEmail {
   subject: string
   text: string
   html: string
+  replyTo?: string
 }
 
 type ResendEmailResponse = {
@@ -180,6 +181,7 @@ export async function sendResendEmail(
       subject: message.subject,
       text: message.text,
       html: message.html,
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
     }),
   })
 

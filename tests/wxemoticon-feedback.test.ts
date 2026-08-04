@@ -37,6 +37,15 @@ describe('wxemoticon missing album feedback', () => {
       expect(result.data.albumName).toBe('缺失专辑')
     }
 
+    const contactResult = missingAlbumFeedbackBodySchema.safeParse({
+      ...validPayload,
+      contactEmail: ' user@example.com ',
+    })
+    expect(contactResult.success).toBe(true)
+    if (contactResult.success) {
+      expect(contactResult.data.contactEmail).toBe('user@example.com')
+    }
+
     expect(missingAlbumFeedbackBodySchema.safeParse({
       ...validPayload,
       members: [validPayload.members[0], validPayload.members[0]],
@@ -44,6 +53,10 @@ describe('wxemoticon missing album feedback', () => {
     expect(missingAlbumFeedbackBodySchema.safeParse({
       ...validPayload,
       productId: 'not-a-wechat-product',
+    }).success).toBe(false)
+    expect(missingAlbumFeedbackBodySchema.safeParse({
+      ...validPayload,
+      contactEmail: 'not-an-email',
     }).success).toBe(false)
   })
 
@@ -64,13 +77,27 @@ describe('wxemoticon missing album feedback', () => {
       ...validPayload,
       albumName: '<script>alert("x")</script>',
       productId: `${productId}&unsafe`,
+      contactEmail: 'user@example.com',
     })
 
     expect(message.subject).toContain('<script>')
-    expect(message.text).toContain('Product ID:')
+    expect(message.text).toContain('专辑 ID：')
+    expect(message.text).toContain('用户希望补录完成后接收通知的邮箱：user@example.com')
     expect(message.html).not.toContain('<script>alert')
     expect(message.html).toContain('&lt;script&gt;')
+    expect(message.html).toContain('补录完成通知邮箱')
+    expect(message.html).toContain('user@example.com')
+    expect(message.replyTo).toBe('user@example.com')
     expect(message.html).toContain('1. aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+  })
+
+  it('shows an explicit placeholder when no notification email is provided', () => {
+    const message = renderMissingAlbumFeedbackEmail(validPayload)
+
+    expect(message.text).toContain('用户希望补录完成后接收通知的邮箱：未填写')
+    expect(message.html).toContain('补录完成通知邮箱')
+    expect(message.html).toContain('未填写')
+    expect(message.replyTo).toBeUndefined()
   })
 
   it('sends the rendered message to the fixed feedback recipient', async () => {
@@ -79,7 +106,10 @@ describe('wxemoticon missing album feedback', () => {
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     ))
     vi.stubGlobal('fetch', fetchMock)
-    const message = renderMissingAlbumFeedbackEmail(validPayload)
+    const message = renderMissingAlbumFeedbackEmail({
+      ...validPayload,
+      contactEmail: 'user@example.com',
+    })
 
     await expect(sendResendEmail(
       're_test_key',
@@ -102,6 +132,7 @@ describe('wxemoticon missing album feedback', () => {
       from: 'feedback@stickerhub.lius.me',
       to: 'black.liusheng@gmail.com',
       subject: '[缺失专辑] 缺失专辑',
+      reply_to: 'user@example.com',
     })
   })
 

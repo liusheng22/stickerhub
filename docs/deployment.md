@@ -77,7 +77,7 @@ Recommended webhook target:
 https://stickerhub.lius.me/api/webhooks/resend
 ```
 
-The wxemoticon desktop feedback endpoint reuses the same Resend sender configuration. It sends missing-album reports to the fixed owner mailbox `black.liusheng@gmail.com`; no extra database, API key, or client secret is required. Configure a Cloudflare rate-limiting rule for the exact endpoint before deployment:
+The wxemoticon desktop feedback endpoint reuses the same Resend sender configuration. It sends missing-album reports to the fixed developer mailbox `black.liusheng@gmail.com`; no extra database, API key, or client secret is required. Configure a Cloudflare rate-limiting rule for the exact endpoint before deployment:
 
 ```text
 POST /api/integrations/wxemoticon/missing-albums
@@ -85,7 +85,9 @@ POST /api/integrations/wxemoticon/missing-albums
 Action: Block
 ```
 
-The endpoint is deliberately `no-store`. Do not add it to a cache rule or a broad cache-everything rule. A missing Resend configuration returns a service-unavailable response, and a Resend delivery failure returns a gateway error; the desktop client keeps the GitHub Issue option available in both cases.
+The endpoint is deliberately `no-store`. Do not add it to a cache rule or a broad cache-everything rule. A missing Resend configuration returns a service-unavailable response, and a Resend delivery failure returns a gateway error; the desktop client keeps the GitHub feedback option available in both cases.
+
+For this feedback endpoint, `NUXT_RESEND_WEBHOOK_SECRET` is optional. It is only needed when delivery-status webhooks are enabled for other transactional emails.
 
 ## Verification
 
