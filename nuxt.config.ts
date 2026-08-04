@@ -207,6 +207,9 @@ export default defineNuxtConfig({
     '/api/integrations/wxemoticon/albums/**': {
       headers: { ...securityHeaders, 'Cache-Control': wxemoticonCacheControl },
     },
+    '/api/integrations/wxemoticon/missing-albums': {
+      headers: { ...securityHeaders, 'Cache-Control': 'no-store' },
+    },
     '/en': cachedInProduction(600),
     '/en/albums': { cache: false },
     '/en/albums/_payload.json': { cache: false },

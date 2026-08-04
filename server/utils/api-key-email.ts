@@ -162,7 +162,7 @@ export function renderIntegrationAccessEmail(
   return { subject, text, html }
 }
 
-async function sendResendEmail(
+export async function sendResendEmail(
   apiKey: string,
   from: string,
   to: string,

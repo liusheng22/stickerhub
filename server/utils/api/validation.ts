@@ -74,6 +74,32 @@ export const wxemoticonProductIdSchema = z.string()
   )
 const creatorSlugSchema = z.string().trim().min(1).max(160)
 const md5Schema = z.string().regex(/^[a-fA-F0-9]{32}$/, 'md5 must be a 32-character hexadecimal value')
+const missingAlbumMemberSchema = z.object({
+  memberIndex: z.number().int().min(1).max(10_000),
+  md5: md5Schema,
+})
+export const missingAlbumFeedbackBodySchema = z.object({
+  schemaVersion: z.literal(1),
+  productId: wxemoticonProductIdSchema,
+  albumName: z.string().trim().min(1).max(160),
+  expectedMemberCount: z.number().int().min(0).max(1_000),
+  members: z.array(missingAlbumMemberSchema).max(1_000),
+  clientVersion: z.string().trim().min(1).max(40),
+}).superRefine((value, context) => {
+  const seen = new Set<string>()
+  for (const member of value.members) {
+    const md5 = member.md5.toLowerCase()
+    if (seen.has(md5)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['members'],
+        message: 'members must not contain duplicate md5 values',
+      })
+      break
+    }
+    seen.add(md5)
+  }
+})
 const apiKeyIdSchema = z.string().regex(/^key_[A-Za-z0-9_-]{16}$/, 'API key ID is invalid')
 const apiKeyScopeSchema = z.enum(API_KEY_SCOPES)
 const apiKeyCreateBodySchema = z.object({
@@ -162,4 +188,13 @@ export async function readApiKeyNotificationBody(event: H3Event) {
 
 export async function readAdminLoginBody(event: H3Event) {
   return parseOrThrow(adminLoginBodySchema, await readBody(event))
+}
+
+export async function readMissingAlbumFeedbackBody(event: H3Event) {
+  const contentLength = Number.parseInt(getRequestHeader(event, 'content-length') || '', 10)
+  if (Number.isFinite(contentLength) && contentLength > 64 * 1024) {
+    throwApiError(413, 'request_too_large', 'The feedback request is too large.')
+  }
+
+  return parseOrThrow(missingAlbumFeedbackBodySchema, await readBody(event))
 }

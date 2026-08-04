@@ -77,6 +77,16 @@ Recommended webhook target:
 https://stickerhub.lius.me/api/webhooks/resend
 ```
 
+The wxemoticon desktop feedback endpoint reuses the same Resend sender configuration. It sends missing-album reports to the fixed owner mailbox `black.liusheng@gmail.com`; no extra database, API key, or client secret is required. Configure a Cloudflare rate-limiting rule for the exact endpoint before deployment:
+
+```text
+POST /api/integrations/wxemoticon/missing-albums
+5 requests per IP / 10 minutes
+Action: Block
+```
+
+The endpoint is deliberately `no-store`. Do not add it to a cache rule or a broad cache-everything rule. A missing Resend configuration returns a service-unavailable response, and a Resend delivery failure returns a gateway error; the desktop client keeps the GitHub Issue option available in both cases.
+
 ## Verification
 
 Before or after deployment, run:

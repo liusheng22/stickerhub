@@ -68,3 +68,20 @@ local recovered file
 ```
 
 The desktop client must keep its own persistent cache. StickerHub unavailability must affect only the selected album and must not replace that album with personal favorites or fail the whole local catalog.
+
+## Missing album feedback
+
+The desktop client also exposes two feedback paths when a locally installed album is not in StickerHub:
+
+- GitHub Issue: opens a prefilled issue in the public repository. The user reviews and submits it in GitHub; the client does not claim that the issue was submitted.
+- Email: sends the sanitized album metadata and member MD5 list to the fixed owner mailbox `black.liusheng@gmail.com`.
+
+The email endpoint is:
+
+```http
+POST /api/integrations/wxemoticon/missing-albums
+```
+
+It is intentionally anonymous and does not use a database, API key, or client-embedded secret. The server requires `NUXT_RESEND_API_KEY` and `NUXT_RESEND_FROM_EMAIL`, sends through the existing Resend integration, and returns only after Resend accepts the message. Requests and responses are `no-store`; the route must not be placed behind a cache rule.
+
+Because the endpoint sends an email, configure a Cloudflare rate-limiting rule for the exact path before exposing it publicly. A reasonable starting point is 5 requests per IP per 10 minutes with a Block action. This protects the fixed mailbox without requiring another database or quota service.
