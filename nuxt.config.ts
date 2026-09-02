@@ -76,6 +76,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  vite: {
+    server: {
+      // Cloudflare Quick Tunnels use a new trycloudflare.com subdomain for each local test.
+      allowedHosts: ['.trycloudflare.com'],
+    },
+  },
+
   ui: {
     fonts: true,
     colorMode: false,
@@ -203,7 +210,9 @@ export default defineNuxtConfig({
     '/search': { cache: false },
     '/search/_payload.json': { cache: false },
     '/support': cachedInProduction(600),
+    '/support/api-key': { headers: { ...securityHeaders, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } },
     '/api/site/**': cachedInProduction(300),
+    '/api/access-requests/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/api/integrations/wxemoticon/albums/**': {
       headers: { ...securityHeaders, 'Cache-Control': wxemoticonCacheControl },
     },
@@ -220,6 +229,7 @@ export default defineNuxtConfig({
     '/en/search': { cache: false },
     '/en/search/_payload.json': { cache: false },
     '/en/support': cachedInProduction(600),
+    '/en/support/api-key': { headers: { ...securityHeaders, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } },
     '/api/admin/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/admin/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },
     '/api/v1/**': { headers: { ...securityHeaders, 'Cache-Control': 'no-store' } },

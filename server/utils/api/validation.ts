@@ -124,6 +124,10 @@ const apiKeyNotificationBodySchema = z.object({
 const adminLoginBodySchema = z.object({
   adminKey: z.string().min(32).max(512),
 })
+const apiKeyRequestEmailBodySchema = z.object({
+  email: z.string().trim().email().max(320),
+}).strict()
+const apiKeyRequestVerificationTokenSchema = z.string().min(1).max(2_048)
 
 function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value)
@@ -189,6 +193,19 @@ export async function readApiKeyNotificationBody(event: H3Event) {
 
 export async function readAdminLoginBody(event: H3Event) {
   return parseOrThrow(adminLoginBodySchema, await readBody(event))
+}
+
+export async function readApiKeyRequestEmailBody(event: H3Event) {
+  const contentLength = Number.parseInt(getRequestHeader(event, 'content-length') || '', 10)
+  if (Number.isFinite(contentLength) && contentLength > 4 * 1024) {
+    throwApiError(413, 'request_too_large', 'The request is too large.')
+  }
+
+  return parseOrThrow(apiKeyRequestEmailBodySchema, await readBody(event))
+}
+
+export function readApiKeyRequestVerificationToken(event: H3Event) {
+  return parseOrThrow(apiKeyRequestVerificationTokenSchema, getQuery(event).token)
 }
 
 export async function readMissingAlbumFeedbackBody(event: H3Event) {

@@ -19,6 +19,12 @@ The admin console is owner-only and is used to manage developer access for appro
 
 The administrator key is not persisted in browser storage.
 
+## Reviewing API Key requests
+
+Developers start from `/support`, verify their contact email, and submit a public GitHub Issue with their project details. The Issue is a request record only; it does not create an API key.
+
+After reviewing an Issue, create the approved integration in `/admin/keys`, use the verified contact email as the owner email, and choose whether to send the operational notification. The one-time API key still needs to be shared through an appropriate secure channel.
+
 ## Key lifecycle
 
 The admin console supports:

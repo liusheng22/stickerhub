@@ -19,6 +19,7 @@
     "catalog": "Sticker packs",
     "catalogUnavailable": "Sticker packs are temporarily unavailable.",
     "readOnly": "Read-only",
+    "githubRepository": "Open StickerHub on GitHub",
     "brandTagline": "Your go-to place for sticker packs.",
     "catalogScale": "{packs} sticker packs · {stickers} stickers"
   },
@@ -85,6 +86,10 @@
     "support": {
       "title": "Support",
       "description": "Support StickerHub's ongoing updates and maintenance."
+    },
+    "apiKeyRequest": {
+      "title": "Request an API Key",
+      "description": "Verify your email, then submit a StickerHub API Key request through GitHub."
     },
     "docs": {
       "title": "Developer access",
@@ -242,8 +247,46 @@
     "kofiTitle": "Support from anywhere.",
     "kofiDescription": "Send a one-time tip through Ko-fi and PayPal.",
     "openKofi": "Open Ko-fi",
+    "apiKeyEyebrow": "Developer access",
+    "apiKeyTitle": "Request a developer API Key",
+    "apiKeyDescription": "Integrating StickerHub on your server? Verify your email, then submit your request through GitHub.",
+    "applyApiKey": "Request an API Key",
     "voluntaryTitle": "Always voluntary",
     "voluntaryDescription": "Support never changes access to StickerHub. Browsing, search, and downloads stay free."
+  },
+  "accessRequest": {
+    "backToSupport": "Back to support",
+    "eyebrow": "Developer access",
+    "title": "Request an API Key",
+    "description": "Verify your email first, then submit your request on GitHub. An administrator reviews requests and issues API Keys separately.",
+    "verifying": "Verifying your email link…",
+    "emailLabel": "Contact email",
+    "emailDescription": "After verification, this address is prefilled in a public GitHub Issue for follow-up.",
+    "emailPlaceholder": "you{'@'}example.com",
+    "invalidEmail": "Enter a valid email address.",
+    "sendVerification": "Send verification email",
+    "emailSentTitle": "Verification email sent",
+    "emailSentDescription": "Check {email} and open the verification link. It expires in 24 hours.",
+    "sentHelp": "If the email is not there, check your spam folder or request a new link later.",
+    "sendErrorTitle": "The verification email could not be sent",
+    "sendErrorDescription": "Please try again shortly.",
+    "invalidLinkTitle": "This verification link is invalid or expired",
+    "invalidLinkDescription": "Enter your email again to send a new verification link.",
+    "startOver": "Start over",
+    "verifiedEyebrow": "Email verified",
+    "verifiedTitle": "Continue with a GitHub Issue",
+    "verifiedDescription": "Your email is verified. Next, a public Issue with your contact email prefilled will open; add your project details and submit it yourself.",
+    "verifiedEmail": "Verified email",
+    "openGithubIssue": "Open GitHub to submit request",
+    "githubDisclosure": "After submission, your email and the information you add will be public in the GitHub Issue.",
+    "stepsEyebrow": "Application steps",
+    "stepsTitle": "Three steps to apply",
+    "stepOneTitle": "Verify your email",
+    "stepOneDescription": "Enter the email address for follow-up.",
+    "stepTwoTitle": "Add request details",
+    "stepTwoDescription": "Describe your project and intended use in a GitHub Issue.",
+    "stepThreeTitle": "Wait for manual review",
+    "stepThreeDescription": "The administrator follows up through your contact email after review."
   },
   "error": {
     "notFoundTitle": "This sticker pack is not here",

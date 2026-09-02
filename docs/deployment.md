@@ -62,7 +62,7 @@ After the first valid Worker deployment, secrets can be uploaded in one operatio
 
 ## Email notifications
 
-When Resend is configured, StickerHub can send access-created notifications to approved integration owners.
+When Resend is configured, StickerHub can send access-created notifications to approved integration owners and email-verification links for API Key requests.
 
 Required settings for email support:
 
@@ -70,6 +70,8 @@ Required settings for email support:
 - `NUXT_RESEND_FROM_EMAIL`
 - `NUXT_RESEND_WEBHOOK_SECRET`
 - `NUXT_SITE_URL` as a valid public HTTPS URL at build time
+
+`NUXT_SESSION_PASSWORD` also signs the short-lived verification links used by `/support/api-key`; it must be configured and kept private.
 
 Recommended webhook target:
 
@@ -85,7 +87,17 @@ POST /api/integrations/wxemoticon/missing-albums
 Action: Block
 ```
 
-The endpoint is deliberately `no-store`. Do not add it to a cache rule or a broad cache-everything rule. A missing Resend configuration returns a service-unavailable response, and a Resend delivery failure returns a gateway error; the desktop client keeps the GitHub feedback option available in both cases.
+The public API Key request endpoint also sends email. Configure a separate Cloudflare rate-limiting rule before exposing it:
+
+```text
+POST /api/access-requests/email
+5 requests per IP / 10 minutes
+Action: Block
+```
+
+The endpoint only sends a verification email. It does not persist an application, create a Key, or issue a Key automatically. The verification link is `no-store` and has a `no-referrer` policy before the applicant opens the public GitHub Issue.
+
+The feedback and API Key request endpoints are deliberately `no-store`. Do not add either to a cache rule or a broad cache-everything rule. A missing Resend configuration returns a service-unavailable response, and a Resend delivery failure returns a gateway error; the desktop client keeps the GitHub feedback option available in both cases.
 
 For this feedback endpoint, `NUXT_RESEND_WEBHOOK_SECRET` is optional. It is only needed when delivery-status webhooks are enabled for other transactional emails.
 

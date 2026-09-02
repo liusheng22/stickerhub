@@ -59,6 +59,18 @@ useHead(() => ({
               linkLeadingIcon: 'size-4 text-ink/55 group-hover:text-ink',
             }"
           />
+          <UButton
+            label="GitHub"
+            icon="i-lucide-github"
+            href="https://github.com/liusheng22/stickerhub"
+            target="_blank"
+            rel="noopener noreferrer"
+            external
+            color="neutral"
+            variant="ghost"
+            class="hidden lg:inline-flex"
+            :aria-label="t('common.githubRepository')"
+          />
           <LanguageSwitcher class="hidden lg:block" />
         </template>
 
@@ -73,6 +85,18 @@ useHead(() => ({
               highlight-color="brand"
               class="w-full"
               :ui="{ link: 'min-h-11 text-base font-semibold' }"
+            />
+            <UButton
+              label="GitHub"
+              icon="i-lucide-github"
+              href="https://github.com/liusheng22/stickerhub"
+              target="_blank"
+              rel="noopener noreferrer"
+              external
+              color="neutral"
+              variant="outline"
+              class="w-full justify-center"
+              :aria-label="t('common.githubRepository')"
             />
             <LanguageSwitcher class="w-full" />
           </div>

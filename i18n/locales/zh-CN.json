@@ -19,6 +19,7 @@
     "catalog": "表情包",
     "catalogUnavailable": "表情包暂时不可用。",
     "readOnly": "只读",
+    "githubRepository": "打开 StickerHub GitHub 仓库",
     "brandTagline": "海量表情包，持续收录与更新",
     "catalogScale": "已收录 {packs} 个表情专辑 · {stickers} 张表情"
   },
@@ -85,6 +86,10 @@
     "support": {
       "title": "赞赏",
       "description": "支持 StickerHub 的持续更新与维护。"
+    },
+    "apiKeyRequest": {
+      "title": "申请 API Key",
+      "description": "验证邮箱后，通过 GitHub 提交 StickerHub API Key 申请。"
     },
     "docs": {
       "title": "开发者接入",
@@ -242,8 +247,46 @@
     "kofiTitle": "从世界各地支持。",
     "kofiDescription": "通过 Ko-fi 和 PayPal 完成一次性赞赏。",
     "openKofi": "打开 Ko-fi",
+    "apiKeyEyebrow": "开发者接入",
+    "apiKeyTitle": "申请开发者 API Key",
+    "apiKeyDescription": "准备在服务器端接入 StickerHub？先验证邮箱，再通过 GitHub 提交申请。",
+    "applyApiKey": "申请 API Key",
     "voluntaryTitle": "完全自愿",
     "voluntaryDescription": "赞赏不会改变对 StickerHub 的访问。浏览、搜索和下载始终免费。"
+  },
+  "accessRequest": {
+    "backToSupport": "返回赞赏页",
+    "eyebrow": "开发者接入",
+    "title": "申请 API Key",
+    "description": "先验证你的邮箱，随后在 GitHub 提交申请。管理员审核后会单独签发 API Key。",
+    "verifying": "正在验证邮箱链接…",
+    "emailLabel": "联系邮箱",
+    "emailDescription": "验证成功后，此邮箱会预填到公开的 GitHub Issue 中，用于后续联系。",
+    "emailPlaceholder": "you{'@'}example.com",
+    "invalidEmail": "请输入有效的邮箱地址。",
+    "sendVerification": "发送验证邮件",
+    "emailSentTitle": "验证邮件已发送",
+    "emailSentDescription": "请查收 {email} 并点击其中的验证链接。链接 24 小时内有效。",
+    "sentHelp": "没有看到邮件时，请检查垃圾邮件箱，或稍后重新申请。",
+    "sendErrorTitle": "暂时无法发送验证邮件",
+    "sendErrorDescription": "请稍后再试。",
+    "invalidLinkTitle": "验证链接无效或已过期",
+    "invalidLinkDescription": "请重新填写邮箱发送新的验证邮件。",
+    "startOver": "重新申请",
+    "verifiedEyebrow": "邮箱已验证",
+    "verifiedTitle": "继续提交 GitHub Issue",
+    "verifiedDescription": "你的邮箱已通过验证。下一步会打开一个预填联系邮箱的公开 Issue；请补充项目说明后自行提交。",
+    "verifiedEmail": "已验证邮箱",
+    "openGithubIssue": "前往 GitHub 提交申请",
+    "githubDisclosure": "提交后，邮箱和你填写的内容会公开显示在 GitHub Issue 中。",
+    "stepsEyebrow": "申请步骤",
+    "stepsTitle": "三步完成申请",
+    "stepOneTitle": "验证邮箱",
+    "stepOneDescription": "输入接收后续联系的邮箱。",
+    "stepTwoTitle": "补充申请信息",
+    "stepTwoDescription": "在 GitHub Issue 中说明你的项目和使用方式。",
+    "stepThreeTitle": "等待人工审核",
+    "stepThreeDescription": "管理员审核后会通过你的联系邮箱跟进。"
   },
   "error": {
     "notFoundTitle": "这里没有这套表情包",

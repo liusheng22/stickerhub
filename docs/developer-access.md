@@ -19,8 +19,19 @@ Developer access is not positioned as the main product experience and is intenti
 
 - One revocable API key per integration
 - Keys are issued manually by the StickerHub operator
-- Anonymous self-service registration is not available
+- Submitting a request never creates or returns an API key automatically
 - API keys must stay on the server side and must not be embedded in public browser code
+
+## Request an API key
+
+Developers can begin from `/support` and select **Request an API Key**:
+
+1. Enter a contact email address and open the verification link sent by StickerHub. The link is valid for 24 hours.
+2. After verification, open the prefilled API Key request Issue in the public GitHub repository.
+3. Add the project details and intended server-side usage, then submit the Issue yourself.
+4. The StickerHub operator reviews the request and, if approved, creates a distinct Key from `/admin/keys`.
+
+The prefilled Issue includes the verified contact email so the operator can follow up. It is a public GitHub Issue, so only submit information you are comfortable making public. Do not put an API key, payment information, or other secrets in an Issue.
 
 ## API scope
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
+const localePath = useLocalePath()
 
 useSeoMeta({
   title: () => t('seo.support.title'),
@@ -92,6 +93,36 @@ useSeoMeta({
             </div>
           </UCard>
         </div>
+      </section>
+
+      <section class="mt-10" aria-labelledby="api-key-request-title">
+        <UCard
+          variant="outline"
+          class="overflow-hidden border-2 border-ink bg-mint shadow-[6px_6px_0_#171717]"
+          :ui="{ body: 'p-0 sm:p-0' }"
+        >
+          <div class="grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+            <div class="grid min-h-28 place-items-center border-b-2 border-ink bg-ink p-7 lg:min-h-full lg:border-b-0 lg:border-r-2">
+              <UIcon name="i-lucide-key-round" class="size-11 text-mint" aria-hidden="true" />
+            </div>
+            <div class="p-6 sm:p-8">
+              <p class="font-mono text-xs font-bold uppercase text-ink/65">{{ t('support.apiKeyEyebrow') }}</p>
+              <h2 id="api-key-request-title" class="mt-2 font-display text-3xl font-extrabold leading-tight">
+                {{ t('support.apiKeyTitle') }}
+              </h2>
+              <p class="mt-3 max-w-[55ch] leading-7 text-ink/70">{{ t('support.apiKeyDescription') }}</p>
+            </div>
+            <div class="border-t-2 border-ink p-6 sm:p-8 lg:border-t-0 lg:border-l-2">
+              <UButton
+                :to="localePath('/support/api-key')"
+                :label="t('support.applyApiKey')"
+                icon="i-lucide-arrow-right"
+                trailing
+                class="offset-action w-full justify-center"
+              />
+            </div>
+          </div>
+        </UCard>
       </section>
 
       <UAlert

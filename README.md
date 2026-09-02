@@ -20,7 +20,7 @@ StickerHub is primarily a consumer-facing website:
 - download and use sticker packs
 - continue browsing through creators and studios
 
-A small developer-access surface also exists for approved integrations, but it is secondary to the public website.
+A small developer-access surface also exists for approved integrations, but it is secondary to the public website. A developer can start an access request from `/support`; email verification and a GitHub Issue make the request traceable, while the owner still reviews and issues each key manually.
 
 ## Stack
 
@@ -42,6 +42,8 @@ A small developer-access surface also exists for approved integrations, but it i
 | `/search?q=` | Search results |
 | `/creators` | Creator and studio directory |
 | `/creators/:creatorSlug` | Creator detail and pack listing |
+| `/support` | Voluntary support and API Key request entry |
+| `/support/api-key` | Email verification and API Key request handoff |
 | `/docs` | Developer access guide |
 | `/docs/reference` | Interactive API reference |
 | `/admin/login` | Owner login |
